@@ -127,4 +127,28 @@ class ToricCodeHamiltonian(FixedOperators):
     # print(len(jax.tree_leaves(cs)))
     # print(matrix_elements)
     return jax.tree_leaves(cs), jax.tree_leaves(matrix_elements)
+
+#@title Define Class for Exponential Model Hamiltonian
+class ExpHamiltonian(FixedOperators):
+  def __init__(self, Jv, Jf, h, 
+               face_bonds, vertex_bonds):
+    self.Jv = Jv
+    self.Jf = Jf
+    self.h = h
+    self.face_bonds = face_bonds
+    self.vertex_bonds = vertex_bonds
+
+  def get_terms(self, config, operator_params=None):
+    vertex_list = []    #List for all terms from vertex operators
+    face_list = []      #List for all terms from face operators
+    for face_bond in self.face_bonds:     #Loop through all face bonds, get new configurations and mat elements
+      face_bond_op = FaceBond(config, self.Jf, face_bond)
+      face_list.append(face_bond_op.get_terms(config))
+    for vertex_bond in self.vertex_bonds:
+      vertex_bond_op = VertexBondExpModel(config, self.Jv, self.h, vertex_bond)
+      vertex_list.append(vertex_bond_op.get_terms(config))
+    all_terms_list = vertex_list + face_list 
+    cs, matrix_elements = zip(*all_terms_list)
+    return jax.tree_leaves(cs), jax.tree_leaves(matrix_elements)
+    
     
