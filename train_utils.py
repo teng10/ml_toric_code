@@ -2,7 +2,7 @@
 import jax
 import functools
 import jax.numpy as jnp
-import jax.grad as grad
+from jax import grad
 
 def energy_local_fn(config, psi_config, ham, psi, model_params):
   """
