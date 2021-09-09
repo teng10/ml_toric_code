@@ -57,7 +57,7 @@ def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move
     new_config, new_psi, condition = _update_config(rng2, config, 
                                                    config_propose, psi_c, psi, model_params) #Update config
     
-    num_updates += condition      #Keep track of number of accepted new configs
+    num_updates = num_updates + condition      #Keep track of number of accepted new configs
     return (new_config, new_psi, num_updates), None
 
   rng = jax.random.split(key, num=2 * len_chain)
