@@ -39,4 +39,4 @@ def create_bond_list(size, lattice_vectors = {(0, 1), (1,0)},
     final_indices.append(c_graph[two_d_indices]) #indices for operators
   # print(f"The list of bonds for {input_bond_list} is")
   # print(f"{final_indices}")
-  return np.asarray(final_indices)
+  return jnp.asarray(final_indices)     # Need to keep jnp because later indexing this using jnp array

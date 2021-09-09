@@ -4,7 +4,7 @@ import jax.numpy as jnp
 import itertools
 import sample_utils
 
-def compute_overlap_exact(w_psi, w_phi, psi, phi, num_spins, batch_size=100):
+def compute_overlap_exact(w_psi, w_phi, psi, phi, spin_shape, batch_size=100):
   def overlap_fn(psis, phis):
     return jnp.mean(jnp.conjugate(psis) * phis)
   
@@ -17,6 +17,8 @@ def compute_overlap_exact(w_psi, w_phi, psi, phi, num_spins, batch_size=100):
   phi_vectorized = jax.vmap(phi, in_axes=(None, 0))
   
   # Define batched configs
+  (shape_x, shape_y) = spin_shape
+  num_spins = shape_x * shape_y  
   iterator = itertools.product([1., -1.], repeat=num_spins)
   configs_all = sample_utils._batch_iterator(iterator, batch_size)
   new_overlaps = []
