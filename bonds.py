@@ -1,5 +1,6 @@
 #@title Create Bond Lists
 
+import jax.numpy as jnp
 import numpy as np
 
 def create_bond_list(size, lattice_vectors = {(0, 1), (1,0)},  
