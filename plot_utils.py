@@ -1,7 +1,11 @@
 #@title Plot utilities
 import numpy as np
+import math
 import seaborn
 import matplotlib.pyplot as plt
+
+round_to_n = lambda x, n: x if x == 0 else round(x, -int(math.floor(math.log10(abs(x)))) + (n - 1))
+round_to_2 = lambda x: round_to_n(x, 2)
 
 def plot_weights(axarray, params, h_field, model_name):
 	"""

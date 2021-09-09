@@ -6,6 +6,7 @@ import optax
 import train_utils
 import utils
 import mcmc
+import numpy as np
 
 def MCMC_optimization(key, init_batched_cs, init_batched_psis, psi, init_params, opt_update, init_opt_state, num_steps, 
                       len_chain, propose_move_fn, make_move_fn, ham, learning_rate, p):
@@ -37,7 +38,7 @@ def MCMC_optimization(key, init_batched_cs, init_batched_psis, psi, init_params,
     return ((new_batch_configs, new_batch_psis_updated, new_model_params, opt_state), 
       (num_accepts, energy_expectation, grad_psi_expectation, grad_energy_expectation))
 
-  rngs = utils.split_key(key, jnp.array([num_steps, init_batched_cs.shape[0], 2]))
+  rngs = utils.split_key(key, np.array([num_steps, init_batched_cs.shape[0], 2], dtype=int))
   # Scan bathces for num_steps
   return jax.lax.scan(f=_MCMC_step, 
       init=(init_batched_cs, init_batched_psis, init_params, init_opt_state),  xs=(rngs))

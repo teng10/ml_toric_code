@@ -2,14 +2,15 @@
 import jax
 import jax.numpy as jnp
 import math
+import numpy as np
 
 round_to_n = lambda x, n: x if x == 0 else round(x, -int(math.floor(math.log10(abs(x)))) + (n - 1))
 round_to_2 = lambda x: round_to_n(x, 2)
 
 def split_key(key, new_shape):
-  keys_dim = new_shape[:-1]
+  # keys_dim = new_shape[:-1]
   # print(keys_dim)
-  rng = jax.random.split(key, jnp.prod(keys_dim))      #Split the keys based on batch size and steps
+  rng = jax.random.split(key, np.prod(new_shape)//new_shape[-1])      #Split the keys based on batch size and steps
   rngs = jnp.reshape(rng, new_shape)
   return rngs
 
