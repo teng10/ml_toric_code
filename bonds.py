@@ -3,6 +3,7 @@
 import jax.numpy as jnp
 import numpy as np
 
+
 def create_bond_list(size, lattice_vectors = {(0, 1), (1,0)},  
                      input_bond_list=[(0,0), (1, 0), (2, 0), (1,1)], translations=[(2, 0), (0, 1)]):
   "Return a list of bonds given a specified single bond and translations"

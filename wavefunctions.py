@@ -102,12 +102,13 @@ class RBM_noise(hk.Module):
   """
   RBM noise without translational invariance. 
   """
-  def __init__(self, name=None):
+  def __init__(self, spin_shape, name=None):
     super().__init__(name=None)
-    output_channel = 1
+    self.spin_shape = spin_shape
 
-  def __call__(self, x_2d):
+  def __call__(self, x):
     # x_2d
+    x_2d = einops.rearrange(x, '(x y)-> x y', x=self.spin_shape[0], y=self.spin_shape[1])
     x_r1 = jnp.roll(x_2d, -1, axis=0)
     # print(f"rolled 1 is {x_r1}")
     x_r2 = jnp.roll(x_r1, -1, axis=0)
@@ -142,5 +143,5 @@ class RBM_noise(hk.Module):
 
     return output
 
-def fwd_noise(x):
-  return RBM_noise()(x)
+def fwd_noise(x, spin_shape):
+  return RBM_noise(spin_shape)(x)
