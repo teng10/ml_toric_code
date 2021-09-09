@@ -21,11 +21,11 @@ def MCMC_optimization(key, batched_configs, batched_psis, psi, model_params, opt
                                         propose_move_fn=propose_move_fn, make_move_fn=make_move_fn, 
                                         ham=ham, p=p)
     vectorized_update_chain = jax.vmap(update_chain_fn, in_axes=(0, 0, 0, None))
-    new_batch_configs, new_batch_psis, num_accepts = vectorized_update_chain(rngs, carried_configs, carried_psis, carried_model_params)      #Equilibrate chains
+    new_batch_configs, new_batch_psis, num_accepts = vectorized_update_chain(rngs, 
+                                                      carried_configs, carried_psis, carried_model_params)      #Equilibrate chains
     (grad_energy_expectation, energy_expectation, grad_psi_expectation, grad_psi_batch) = train_utils.grad_energy_expectation_gradbatch_fn(
-                                                                    batched_configs, batched_psi, 
+                                                                    new_batch_configs, new_batch_psis, 
                                                                     psi, model_params, ham) 
-    # print(f" grad_energy_expecatation  {jax.tree_map(lambda x: x, grad_energy_expectation)}")
     # Transform the gradients using the optimiser.
     updates, opt_state = opt_update(grad_energy_expectation, carried_opt_state, carried_model_params)
     # Update parameters.
@@ -45,5 +45,5 @@ def MCMC_optimization(key, batched_configs, batched_psis, psi, model_params, opt
       (num_accepts, energy_expectation, grad_psi_expectation, grad_energy_expectation)) = jax.lax.scan(f=_MCMC_step, 
       init=(batched_configs, batched_psis, model_params, opt_state),  xs=(rngs))
 
-  return ((new_batch_configs, new_batch_psis, new_model_params, opt_state), 
+  return ((new_batch_configs, new_batch_psis_updated, new_model_params, opt_state), 
     (num_accepts, energy_expectation, grad_psi_expectation, grad_energy_expectation))
