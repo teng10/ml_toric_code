@@ -96,3 +96,51 @@ class RBM_CNN(hk.Module):
 
 def fwd_cnn(x):
   return RBM_CNN(kernels=(3,2))(x)
+
+#@title Neural Network Model
+class RBM_noise(hk.Module):
+  """
+  RBM noise without translational invariance. 
+  """
+  def __init__(self, name=None):
+    super().__init__(name=None)
+    output_channel = 1
+
+  def __call__(self, x_2d):
+    # x_2d
+    x_r1 = jnp.roll(x_2d, -1, axis=0)
+    # print(f"rolled 1 is {x_r1}")
+    x_r2 = jnp.roll(x_r1, -1, axis=0)
+    x_r3 = jnp.roll(x_r1, -1, axis=1)
+    stacked_x = jnp.stack((x_2d, x_r1, x_r2, x_r3))
+    # print(f"stacked x is {[stacked_x[:,::2, :][:,i,1] for i in range(3)]}") # 0-axis is stacked index
+    #                                                                     # 1/2 axis are face operators 
+    x_facebond = stacked_x[:,::2, :]
+    # print(x_facebond[:, ...])
+    x_r1 = jnp.roll(x_2d, -1, axis=0)
+    # print(f"rolled 1 is {x_r1}")
+    x_r2 = jnp.roll(x_r1, -1, axis=0)
+    x_r3 = jnp.roll(x_r2, -1, axis=0)
+    x_r4 = jnp.roll(x_r2, 1, axis=1)
+    stacked_x = jnp.stack((x_r1, x_r2, x_r3, x_r4))
+    # print(f"stacked x is {[stacked_x[:,::2, :][:,i,1] for i in range(3)]}") # 0-axis is stacked index
+    #                                                                     # 1/2 axis are face operators 
+    x_vertexbond = stacked_x[:,::2, :]
+    # print(x_vertexbond[:, 0,0])
+    num_nb, shape_x, shape_y = x_facebond.shape
+    assert num_nb==4
+    # w = hk.get_parameter("w", shape=[num_nb, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.ones)
+    wF = hk.get_parameter("wF", shape=[num_nb, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.ones)
+    bF = hk.get_parameter("bF", shape=[1, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.zeros)
+    assert wF.shape == x_facebond.shape, "Weights shape is not the same as spins bonds"
+    x_convolved_F = jnp.sum(jnp.multiply(wF, x_facebond), axis=0)
+    # assert bF.shape == x_convolved_F.shape, "Bias shape does not match w*sigma shape"
+    wV = hk.get_parameter("wV", shape=[num_nb, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.ones)
+    bV = hk.get_parameter("bV", shape=[1, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.zeros)
+    x_convolved_V = jnp.sum(jnp.multiply(wV, x_vertexbond), axis=0)
+    output = jnp.prod(jnp.cos(bF + x_convolved_F)) * jnp.prod(jnp.cos(bV + x_convolved_V))
+
+    return output
+
+def fwd_noise(x):
+  return RBM_noise()(x)

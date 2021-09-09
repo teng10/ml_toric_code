@@ -19,28 +19,24 @@ class FixedOperators():
 #@title Define Class for Bond Operators
 
 class FaceBond(FixedOperators):
-  def __init__(self, config, Jf, bond):
+  def __init__(self, Jf, bond):
     self.Jf = Jf
-    self.config = config
     self.bond = bond
   
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
-    config = self.config
     spin_prod = jnp.prod(config[self.bond])
     mat_ele = - self.Jf * spin_prod #mat ele is product of spins
     return (face_bond_sample(config, self.bond),) , (mat_ele,)
 
 class VertexBond(FixedOperators):
 
-  def __init__(self, config, Jv, bond):
+  def __init__(self, Jv, bond):
     self.Jv = Jv
-    self.config = config
     self.bond = bond
   
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
-    config = self.config
     mat_ele = - self.Jv
     return (vertex_bond_sample(config, self.bond),) , (mat_ele,)   
 
@@ -48,14 +44,12 @@ class PauliBond(FixedOperators):
   '''
   Matrix elements and connected configurations for magnetic field in the Toric Code model. 
   '''
-  def __init__(self, config, h, bond):
+  def __init__(self, h, bond):
     self.hx, self.hy, self.hz = h
-    self.config = config
     self.bond = bond
   
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
-    config = self.config
     
     config_x = vertex_bond_sample(config, self.bond)
     config_y = vertex_bond_sample(config, self.bond)
@@ -67,26 +61,17 @@ class PauliBond(FixedOperators):
     return (config_z, ) , (mat_ele_z, )
 
 class VertexBondExpModel(FixedOperators):
-  """
-  Bond for exponential term. 
-  """
-  def __init__(self, config, Jv, beta, bond):
+
+  def __init__(self, Jv, beta, bond):
     self.Jv = Jv
     self.betax, self.betay, self.betaz = beta
-    self.config = config
     self.bond = bond
   
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
-    config = self.config
     mat_ele = - self.Jv
-    # spin_prod = self.betaz /2. * config[self.bond]
-    # print(jnp.prod(self.self.betaz /2. *config[self.bond]))
     spin_prod = jnp.prod(jnp.exp(self.betaz /2. * config[self.bond]))
-    # print(self.beta)
     mat_ele_exp = self.Jv * spin_prod #mat ele is product of spins
-    # print(mat_ele_exp)
-    # return (vertex_bond_sample(config, self.bond),config) , (mat_ele,mat_ele)
     return (vertex_bond_sample(config, self.bond), config, ) , (mat_ele, mat_ele_exp, ) 
 
 #@title Define Class for Toric Code Hamiltonian
