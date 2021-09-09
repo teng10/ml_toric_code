@@ -1,4 +1,7 @@
 #@title Utility functions
+import jax
+import jax.numpy as jnp
+import numpy as np
 
 def init_samples(rng, n_sites, batch_size=1):
   cs = jax.random.randint(rng, shape=(batch_size, n_sites), minval=0, maxval=2)
