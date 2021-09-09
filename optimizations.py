@@ -38,7 +38,7 @@ def MCMC_optimization(key, batched_configs, batched_psis, psi, model_params, opt
       (num_accepts, energy_expectation, grad_psi_expectation, grad_energy_expectation))
 
   num_batch = batched_configs.shape[0]      #batch size
-  rngs = utils.split_key(key, (num_steps, num_batch, 2))
+  rngs = utils.split_key(key, jnp.array([num_steps, num_batch, 2]))
 
   ((new_batch_configs, new_batch_psis_updated, new_model_params, opt_state), 
       (num_accepts, energy_expectation, grad_psi_expectation, grad_energy_expectation)) = jax.lax.scan(f=_MCMC_step, 
