@@ -5,6 +5,7 @@ import jax.numpy as jnp
 import optax
 import train_utils
 import utils
+import mcmc
 
 def MCMC_optimization(key, batched_configs, batched_psis, psi, model_params, opt_update, opt_state, num_steps, 
                       len_chain, propose_move_fn, make_move_fn, ham, learning_rate, p, epsilon_inv=0.001):
@@ -15,7 +16,7 @@ def MCMC_optimization(key, batched_configs, batched_psis, psi, model_params, opt
     carried_configs, carried_psis, carried_model_params, carried_opt_state = carry     #Define carries
     rngs = inputs     #rngs for all equilibrated chains in the batch for a single step
 
-    update_chain_fn = functools.partial(update_chain, 
+    update_chain_fn = functools.partial(mcmc.update_chain, 
                                         len_chain=len_chain, psi=psi, 
                                         propose_move_fn=propose_move_fn, make_move_fn=make_move_fn, 
                                         ham=ham, p=p)
