@@ -1,4 +1,5 @@
 #@title Define Fixed Operator property
+import sample_utils
 import jax
 import jax.numpy as jnp
 
@@ -27,7 +28,7 @@ class FaceBond(FixedOperators):
     "Return a list of new configurations and the matrix elements between them"
     spin_prod = jnp.prod(config[self.bond])
     mat_ele = - self.Jf * spin_prod #mat ele is product of spins
-    return (face_bond_sample(config, self.bond),) , (mat_ele,)
+    return (sample_utils.face_bond_sample(config, self.bond),) , (mat_ele,)
 
 class VertexBond(FixedOperators):
 
@@ -38,7 +39,7 @@ class VertexBond(FixedOperators):
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
     mat_ele = - self.Jv
-    return (vertex_bond_sample(config, self.bond),) , (mat_ele,)   
+    return (sample_utils.vertex_bond_sample(config, self.bond),) , (mat_ele,)   
 
 class PauliBond(FixedOperators):
   '''
@@ -51,9 +52,9 @@ class PauliBond(FixedOperators):
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
     
-    config_x = vertex_bond_sample(config, self.bond)
-    config_y = vertex_bond_sample(config, self.bond)
-    config_z = face_bond_sample(config, self.bond)
+    config_x = sample_utils.vertex_bond_sample(config, self.bond)
+    config_y = sample_utils.vertex_bond_sample(config, self.bond)
+    config_z = sample_utils.face_bond_sample(config, self.bond)
 
     mat_ele_x = self.hx
     mat_ele_y = self.hy * config[self.bond] * 0 #### set this to 0 for now
@@ -72,7 +73,7 @@ class VertexBondExpModel(FixedOperators):
     mat_ele = - self.Jv
     spin_prod = jnp.prod(jnp.exp(self.betaz /2. * config[self.bond]))
     mat_ele_exp = self.Jv * spin_prod #mat ele is product of spins
-    return (vertex_bond_sample(config, self.bond), config, ) , (mat_ele, mat_ele_exp, ) 
+    return (sample_utils.vertex_bond_sample(config, self.bond), config, ) , (mat_ele, mat_ele_exp, ) 
 
 #@title Define Class for Toric Code Hamiltonian
 class ToricCodeHamiltonian(FixedOperators):
