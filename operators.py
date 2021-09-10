@@ -46,18 +46,19 @@ class PauliBond(FixedOperators):
   Matrix elements and connected configurations for magnetic field in the Toric Code model. 
   '''
   def __init__(self, h, bond):
-    self.hx, self.hy, self.hz = h
+    # self.hx, self.hy, self.hz = h
+    self.hz = h
     self.bond = bond
   
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
     
-    config_x = sample_utils.vertex_bond_sample(config, self.bond)
-    config_y = sample_utils.vertex_bond_sample(config, self.bond)
+    # config_x = sample_utils.vertex_bond_sample(config, self.bond)
+    # config_y = sample_utils.vertex_bond_sample(config, self.bond)
     config_z = sample_utils.face_bond_sample(config, self.bond)
 
-    mat_ele_x = self.hx
-    mat_ele_y = self.hy * config[self.bond] * 0 #### set this to 0 for now
+    # mat_ele_x = self.hx
+    # mat_ele_y = self.hy * config[self.bond] * 0 #### set this to 0 for now
     mat_ele_z = self.hz * config[self.bond]
     return (config_z, ) , (mat_ele_z, )
 
