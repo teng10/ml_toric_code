@@ -35,12 +35,21 @@ def generate_uniform_noise_param(key, param_dict, amp):
   noise_values = jax.tree_unflatten(tree_def, noise_values)
   return jax.tree_map(lambda x, y: x + y, param_dict, noise_values)
 
-def set_up_ham_field(num_spins, h_z):
+def get_face_bonds(spin_shape):
+	return bonds.create_bond_list(size=(spin_shape[0], spin_shape[1]), input_bond_list=[(0,0), (1, 0), (2, 0), (1,1)])
+
+def get_vertex_bonds(spin_shape):
+	return bonds.create_bond_list(size=(spin_shape[0], spin_shape[1]), input_bond_list=[(1,0), (2, 0), (3, 0), (2, spin_shape[0]-1)]) #fixed bug for odd lattices
+
+def set_up_ham_field(spin_shape, h_z):
   #Set up hamiltonian in field h_z
-  num_col =  np.sqrt(num_spins // 2).astype(int)
-  num_row = 2 * num_col
-  face_operator_bonds = bonds.create_bond_list(size=(num_row, num_col), input_bond_list=[(0,0), (1, 0), (2, 0), (1,1)])
-  vertex_operator_bonds = bonds.create_bond_list(size=(num_row, num_col), input_bond_list=[(1,0), (2, 0), (3, 0), (2, num_col-1)]) #fixed bug for odd lattices
+  num_col =  spin_shape[1]
+  num_row = spin_shape[0]
+  num_spins = num_col * num_row
+  # face_operator_bonds = bonds.create_bond_list(size=(num_row, num_col), input_bond_list=[(0,0), (1, 0), (2, 0), (1,1)])
+  # vertex_operator_bonds = bonds.create_bond_list(size=(num_row, num_col), input_bond_list=[(1,0), (2, 0), (3, 0), (2, num_col-1)]) #fixed bug for odd lattices
+  face_operator_bonds = get_face_bonds(spin_shape)
+  vertex_operator_bonds = get_vertex_bonds(spin_shape) 
   pauli_operator_bonds = np.arange(0, num_spins, 1)
   # Define hamiltonian 
   myham = operators.ToricCodeHamiltonian(Jv=1., Jf=1., h = h_z, face_bonds = face_operator_bonds, vertex_bonds=vertex_operator_bonds, pauli_bonds=pauli_operator_bonds)  
