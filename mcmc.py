@@ -17,17 +17,16 @@ def _update_config(key, config, config_propose, psi_c, psi, model_params):
   new_psi = jnp.where(condition, psi_propose, psi_c)
   return new_config, new_psi, condition
 
-def propose_move_fn(key, config, p, ham):
+def propose_move_fn(key, config, p, vertex_bonds):
   """
   Propose spin flips with probability 'p'; vertex flips with probability '1-p'
   """
   def _propse_spin_flips(key, config):
     num_spin = config.shape[0]
-    spin = jax.random.randint(new_key, shape=(1,), minval=0, maxval=num_spin)
+    spin = jax.random.randint(key, shape=(1,), minval=0, maxval=num_spin)
     return spin
   
-  def _propse_vertex_flips(key, config, ham):
-    vertex_bonds = ham.vertex_bonds
+  def _propse_vertex_flips(key, config):
     num_bonds = vertex_bonds.shape[0]
     vertex = jax.random.randint(key, (1,), minval=0, maxval=num_bonds)
     # return vertex_bonds[tuple(vertex)]
@@ -37,11 +36,11 @@ def propose_move_fn(key, config, p, ham):
   random_num = jax.random.uniform(sub_key, shape=(1,))
   condition = random_num < p
   proposed_move = jnp.where(condition, _propse_spin_flips(new_key, config), 
-                            _propse_vertex_flips(new_key, config, ham))
+                            _propse_vertex_flips(new_key, config))
 
   return proposed_move
 
-def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move_fn, make_move_fn, ham, p):
+def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move_fn, make_move_fn, p):
   """
   For a given chain with initial 'config', attempts to walk 'len_chain' steps and return 'new_config'. 
   p: probability of propsing spin flips
@@ -52,7 +51,7 @@ def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move
     rngs = inputs
     rng1, rng2 = rngs       #Define the splitted keys for making moves and update config
 
-    move = propose_move_fn(rng1, config, p, ham)     #Propose a move
+    move = propose_move_fn(rng1, config, p)     #Propose a move
     config_propose = make_move_fn(config, move)       #Make the move
     new_config, new_psi, condition = _update_config(rng2, config, 
                                                    config_propose, psi_c, psi, model_params) #Update config

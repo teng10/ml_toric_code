@@ -55,17 +55,17 @@ def compute_overlap_exact(w_psi, w_phi, psi, phi, spin_shape, batch_size=100):
   norm_psi = jnp.mean(fraction_list * jnp.array(new_norm_psis))
   norm_phi = jnp.mean(fraction_list * jnp.array(new_norm_phis))
 
-  return jnp.sqrt(jnp.abs(overlap)**2 / (norm_psi * norm_phi))
+  return jnp.sqrt(jnp.abs(overlap)**2 / (norm_psi * norm_phi)), 0, 0      # overlap, std, num_accepts
 
 def compute_overlap_mcmc( 
                         w_psi, 
                         w_phi, 
                         psi_apply, 
                         phi_apply, 
-                        spin_shape,                      
+                        spin_shape,   
+                        propose_move_fn,                    
                         num_samples,
-                        key, 
-                        h_field,                           
+                        key,                           
                         len_chain, 
                         len_chain_burn, 
                         spin_flip_p,
@@ -80,19 +80,17 @@ def compute_overlap_mcmc(
   key_init, key_mcmc = jax.random.split(key, 2)     # Split keys for initializing samples and mcmc process
   cs_init = sample_utils.init_samples(key_init, num_spins, num_samples)     #Create intial chains
   
-  # raise define h_field
-  myham = tc_utils.set_up_ham_field(num_spins, h_field)
 
   # Define update chain function
   update_chain_fn_psi = functools.partial(mcmc.update_chain, 
                                       psi=psi_apply, 
-                                      propose_move_fn=mcmc.propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample, 
-                                      ham=myham, p=spin_flip_p)
+                                      propose_move_fn=propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample, 
+                                      p=spin_flip_p)
   
   update_chain_fn_phi = functools.partial(mcmc.update_chain, 
                                       psi=phi_apply, 
-                                      propose_move_fn=mcmc.propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample, 
-                                      ham=myham, p=spin_flip_p)
+                                      propose_move_fn=propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample, 
+                                      p=spin_flip_p)
   # Vectorize update_chain_fn
   update_chain_fn_psi_vec = jax.vmap(update_chain_fn_psi, in_axes=(0, 0, 0, None, None))
   update_chain_fn_phi_vec = jax.vmap(update_chain_fn_phi, in_axes=(0, 0, 0, None, None))

@@ -20,7 +20,7 @@ def MCMC_optimization(key, init_batched_cs, init_batched_psis, psi, init_params,
     update_chain_fn = functools.partial(mcmc.update_chain, 
                                         len_chain=len_chain, psi=psi, 
                                         propose_move_fn=propose_move_fn, make_move_fn=make_move_fn, 
-                                        ham=ham, p=p)
+                                        p=p)
     update_chain_vectorized = jax.vmap(update_chain_fn, in_axes=(0, 0, 0, None))
     new_batch_configs, new_batch_psis, num_accepts = update_chain_vectorized(rngs, 
                                                       carried_configs, carried_psis, carried_model_params)      #Equilibrate chains
