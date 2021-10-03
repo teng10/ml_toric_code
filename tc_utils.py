@@ -26,13 +26,15 @@ def get_rbm_params(sector):
 
   return {'rbm':dict(bF=bF, wF=wF, bV=np.array([0.]), wV=np.zeros(4))}
 
-def generate_uniform_noise_param(key, param_dict, amp):
+def generate_uniform_noise_param(key, param_dict, amp, return_noise=False):
   param_arrays, tree_def = jax.tree_flatten(param_dict)
   noise_values = [
       jax.random.uniform(k, p.shape, minval=-amp, maxval=amp)
       for k, p in zip(jax.random.split(key, len(param_arrays)), param_arrays)
   ]
   noise_values = jax.tree_unflatten(tree_def, noise_values)
+  if return_noise:
+  	return jax.tree_map(lambda x, y: x + y, param_dict, noise_values), noise_values
   return jax.tree_map(lambda x, y: x + y, param_dict, noise_values)
 
 def get_face_bonds(spin_shape):

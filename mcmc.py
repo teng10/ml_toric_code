@@ -6,7 +6,8 @@ import jax.numpy as jnp
 
 def _update_config(key, config, config_propose, psi_c, psi, model_params):
   """
-  Takes config and proposed config and outputs the updated configuration based on diffusion rule
+  Takes config and proposed config and outputs the updated configuration based on diffusion rule. 
+  P(accept c') = min(1, |psi(c')|^2/|psi(c)|^2), but work with log probability.
   """
   psi_propose = psi(model_params, config_propose)
   log_ratio = 2 * (jnp.log(jnp.abs(psi_propose)) - jnp.log(jnp.abs(psi_c)))    #Compute lof of |psi|^2 ratio
@@ -33,7 +34,8 @@ def propose_move_fn(key, config, p, vertex_bonds):
     return vertex_bonds[vertex]
 
   new_key, sub_key = jax.random.split(key, num=2)
-  random_num = jax.random.uniform(sub_key, shape=(1,))
+  # random_num = jax.random.uniform(sub_key, shape=(1,))
+  random_num = jax.random.uniform(sub_key)
   condition = random_num < p
   proposed_move = jnp.where(condition, _propse_spin_flips(new_key, config), 
                             _propse_vertex_flips(new_key, config))
@@ -62,5 +64,5 @@ def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move
   rng = jax.random.split(key, num=2 * len_chain)
   rngs = jnp.split(rng, 2, axis=0)
   
-  (new_config, new_psi, num_updates), _ = jax.lax.scan(f=_mcmc_fc, init=(config, psi_c, jnp.asarray([0])), xs=(rngs))
+  (new_config, new_psi, num_updates), _ = jax.lax.scan(f=_mcmc_fc, init=(config, psi_c, jnp.array(0)), xs=(rngs))
   return new_config, new_psi, num_updates

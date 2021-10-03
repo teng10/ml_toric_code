@@ -50,5 +50,8 @@ def concat_along_axis(pytrees, axis):
 
 def stack_along_axis(pytrees, axis):
   """Concatenates `pytrees` along `axis`."""
-  concat_leaves_fn = lambda *args: jnp.stack(args, axis)
-  return jax.tree_map(concat_leaves_fn, *pytrees)
+  stack_leaves_fn = lambda *args: jnp.stack(args, axis)
+  return jax.tree_map(stack_leaves_fn, *pytrees)
+
+def shape_structure(pytree):
+  return jax.tree_map(lambda x: x.shape, pytree)
