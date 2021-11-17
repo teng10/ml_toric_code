@@ -30,8 +30,11 @@ def similarity_fn(w1, w2):
 	V_max = _S_max(V_array_1, V_array_2)
 	return (1. + (F_max + V_max) / 2.) /2. 
 
-def kernel_fn(w1, w2, epsilon):
-	return jnp.exp(-(1. - similarity_fn(w1, w2)) / (2. * epsilon))
+def kernel_fn(similarity, epsilon):
+	return jnp.exp(-(1. - similarity) / (2. * epsilon))
+
+# def kernel_fn(w1, w2, epsilon):
+# 	return jnp.exp(-(1. - similarity_fn(w1, w2)) / (2. * epsilon))
 
 # def kernel_mat(all_w, epsilon):
 # 	stacked_w_dict = utils.stack_along_axis(all_w, 0)
@@ -47,15 +50,25 @@ def kernel_fn(w1, w2, epsilon):
 # 	A_mat = K_mat / jnp.sqrt(jnp.outer(z1, z2))
 # 	return K_mat, A_mat
 	
-def kernel_mat(all_w, epsilon):
-	kernel_vec = jax.vmap(kernel_fn, in_axes=(0, None, None))
-	kernel_vec_vec = jax.vmap(kernel_vec, in_axes=(None, 0, None))
-	return kernel_vec_vec(all_w, all_w, epsilon)
+# def kernel_mat(all_w, epsilon):
+# 	kernel_vec = jax.vmap(kernel_fn, in_axes=(0, None, None))
+# 	kernel_vec_vec = jax.vmap(kernel_vec, in_axes=(None, 0, None))
+# 	return kernel_vec_vec(all_w, all_w, epsilon)
 
-def transition_mat(all_w, epsilon):
+# def transition_mat(all_w, epsilon):
+# 	"""Return both kernal matrix and a similar matrix A (which is symmetric)"""
+# 	K_mat = kernel_mat(all_w, epsilon)
+# 	z1 = jnp.sum(K_mat, axis=1)
+# 	z2 = jnp.sum(K_mat, axis=0)
+# 	A_mat = K_mat / jnp.sqrt(jnp.outer(z1, z2))
+# 	return K_mat, A_mat
+
+def transition_mat(K_mat, epsilon, return_z=False):
 	"""Return both kernal matrix and a similar matrix A (which is symmetric)"""
-	K_mat = kernel_mat(all_w, epsilon)
+	# K_mat = kernel_mat(all_w, epsilon)
 	z1 = jnp.sum(K_mat, axis=1)
 	z2 = jnp.sum(K_mat, axis=0)
 	A_mat = K_mat / jnp.sqrt(jnp.outer(z1, z2))
-	return K_mat, A_mat
+	if return_z:
+		return A_mat, jnp.diag(1. / jnp.sqrt(z2))
+	return A_mat
