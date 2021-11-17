@@ -2,6 +2,7 @@
 import jax.numpy as jnp
 import haiku as hk
 import einops
+import tc_utils
 
 class RBM(hk.Module):
 
@@ -12,24 +13,7 @@ class RBM(hk.Module):
   def __call__(self, x):
     # size = x.shape[0]
     x_2d = einops.rearrange(x, '(x y)-> x y', x=self.spin_shape[0], y=self.spin_shape[1])
-    x_r1 = jnp.roll(x_2d, -1, axis=0)
-    # print(f"rolled 1 is {x_r1}")
-    x_r2 = jnp.roll(x_r1, -1, axis=0)
-    x_r3 = jnp.roll(x_r1, -1, axis=1)
-    stacked_x = jnp.stack((x_2d, x_r1, x_r2, x_r3))
-    # print(f"stacked x is {[stacked_x[:,::2, :][:,i,1] for i in range(3)]}") # 0-axis is stacked index
-    #                                                                     # 1/2 axis are face operators 
-    x_facebond = stacked_x[:,::2, :]
-    # print(x_facebond[:, ...])
-    x_r1 = jnp.roll(x_2d, -1, axis=0)
-    # print(f"rolled 1 is {x_r1}")
-    x_r2 = jnp.roll(x_r1, -1, axis=0)
-    x_r3 = jnp.roll(x_r2, -1, axis=0)
-    x_r4 = jnp.roll(x_r2, 1, axis=1)
-    stacked_x = jnp.stack((x_r1, x_r2, x_r3, x_r4))
-    # print(f"stacked x is {[stacked_x[:,::2, :][:,i,1] for i in range(3)]}") # 0-axis is stacked index
-    #                                                                     # 1/2 axis are face operators 
-    x_vertexbond = stacked_x[:,::2, :]
+    x_facebond, x_vertexbond = tc_utils.stack_F_V_img(x_2d)
     # print(x_vertexbond[:, 0,0])
     num_nb, shape_x, shape_y = x_facebond.shape
     assert num_nb==4
@@ -107,30 +91,11 @@ class RBM_noise(hk.Module):
     self.spin_shape = spin_shape
 
   def __call__(self, x):
-    # x_2d
     x_2d = einops.rearrange(x, '(x y)-> x y', x=self.spin_shape[0], y=self.spin_shape[1])
-    x_r1 = jnp.roll(x_2d, -1, axis=0)
-    # print(f"rolled 1 is {x_r1}")
-    x_r2 = jnp.roll(x_r1, -1, axis=0)
-    x_r3 = jnp.roll(x_r1, -1, axis=1)
-    stacked_x = jnp.stack((x_2d, x_r1, x_r2, x_r3))
-    # print(f"stacked x is {[stacked_x[:,::2, :][:,i,1] for i in range(3)]}") # 0-axis is stacked index
-    #                                                                     # 1/2 axis are face operators 
-    x_facebond = stacked_x[:,::2, :]
-    # print(x_facebond[:, ...])
-    x_r1 = jnp.roll(x_2d, -1, axis=0)
-    # print(f"rolled 1 is {x_r1}")
-    x_r2 = jnp.roll(x_r1, -1, axis=0)
-    x_r3 = jnp.roll(x_r2, -1, axis=0)
-    x_r4 = jnp.roll(x_r2, 1, axis=1)
-    stacked_x = jnp.stack((x_r1, x_r2, x_r3, x_r4))
-    # print(f"stacked x is {[stacked_x[:,::2, :][:,i,1] for i in range(3)]}") # 0-axis is stacked index
-    #                                                                     # 1/2 axis are face operators 
-    x_vertexbond = stacked_x[:,::2, :]
+    x_facebond, x_vertexbond = tc_utils.stack_F_V_img(x_2d)
     # print(x_vertexbond[:, 0,0])
     num_nb, shape_x, shape_y = x_facebond.shape
     assert num_nb==4
-    # w = hk.get_parameter("w", shape=[num_nb, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.ones)
     wF = hk.get_parameter("wF", shape=[num_nb, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.ones)
     bF = hk.get_parameter("bF", shape=[1, shape_x, shape_y], dtype=x_2d.dtype, init=jnp.zeros)
     assert wF.shape == x_facebond.shape, "Weights shape is not the same as spins bonds"

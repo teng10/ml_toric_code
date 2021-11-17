@@ -9,7 +9,7 @@ import mcmc
 import numpy as np
 
 def MCMC_optimization(key, init_batched_cs, init_batched_psis, psi, init_params, opt_update, init_opt_state, num_steps, 
-                      len_chain, propose_move_fn, make_move_fn, ham, learning_rate, p):
+                      len_chain, propose_move_fn, make_move_fn, ham, learning_rate):
   def _MCMC_step(carry, inputs):
     """
     Return new_chains, new_psis, num_accepts, new_model_params, energy, for a single step after walking 'len_chain' 
@@ -19,8 +19,7 @@ def MCMC_optimization(key, init_batched_cs, init_batched_psis, psi, init_params,
 
     update_chain_fn = functools.partial(mcmc.update_chain, 
                                         len_chain=len_chain, psi=psi, 
-                                        propose_move_fn=propose_move_fn, make_move_fn=make_move_fn, 
-                                        p=p)
+                                        propose_move_fn=propose_move_fn, make_move_fn=make_move_fn,)
     update_chain_vectorized = jax.vmap(update_chain_fn, in_axes=(0, 0, 0, None))
     new_batch_configs, new_batch_psis, num_accepts = update_chain_vectorized(rngs, 
                                                       carried_configs, carried_psis, carried_model_params)      #Equilibrate chains

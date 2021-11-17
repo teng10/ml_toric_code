@@ -62,6 +62,30 @@ class PauliBond(FixedOperators):
     mat_ele_z = self.hz * config[self.bond]
     return (config_z, ) , (mat_ele_z, )
 
+class PauliBondX(FixedOperators):
+  '''
+  Matrix elements and connected configurations for magnetic field in the Toric Code model. 
+  '''
+  def __init__(self, hx, bond):
+    self.hx = hx
+    self.bond = bond
+  
+  def get_terms(self, config):
+    "Return a list of new configurations and the matrix elements between them"
+    config_x = sample_utils.vertex_bond_sample(config, self.bond)
+    mat_ele_x = self.hx
+    return (config_x, ) , (mat_ele_x, )
+
+class WilsonLXBond(FixedOperators):
+
+  def __init__(self, bond):
+    self.bond = bond
+  
+  def get_terms(self, config):
+    "Return a list of new configurations and the matrix elements between them"
+    mat_ele = 1.
+    return (sample_utils.vertex_bond_sample(config, self.bond),) , (mat_ele,)   
+
 class VertexBondExpModel(FixedOperators):
 
   def __init__(self, Jv, beta, bond):
@@ -113,6 +137,45 @@ class ToricCodeHamiltonian(FixedOperators):
     # print(jax.tree_leaves(matrix_elements))
     # print(len(jax.tree_leaves(cs)))
     # print(matrix_elements)
+    return jax.tree_leaves(cs), jax.tree_leaves(matrix_elements)
+
+#@title Define Class for Toric Code Hamiltonian
+class ToricCodeHamiltonianRotated(FixedOperators):
+  def __init__(self, Jv, Jf, h, hx, 
+               face_bonds, vertex_bonds, pauli_bonds):
+    self.Jv = Jv
+    self.Jf = Jf
+    self.h = h
+    self.hx = hx
+    self.face_bonds = face_bonds
+    self.vertex_bonds = vertex_bonds
+    self.pauli_bonds = pauli_bonds
+    self.face_bond_op_list = []
+    self.vertex_bond_op_list = []
+    self.pauli_bond_op_list = []
+    for face_bond in self.face_bonds:     #Loop through all face bonds, get new configurations and mat elements
+      face_bond_op = FaceBond(self.Jf, face_bond)
+      self.face_bond_op_list.append(face_bond_op)
+    for vertex_bond in self.vertex_bonds:
+      vertex_bond_op = VertexBond(self.Jv, vertex_bond)
+      self.vertex_bond_op_list.append(vertex_bond_op)
+    for pauli_bond in self.pauli_bonds:
+      pauli_bond_opz = PauliBond(self.h, pauli_bond)  
+      pauli_bond_opx = PauliBondX(self.hx, pauli_bond)  
+      self.pauli_bond_op_list.append(pauli_bond_opz) 
+      self.pauli_bond_op_list.append(pauli_bond_opx)    
+  def get_terms(self, config, operator_params=None):
+    vertex_list = []    #List for all terms from vertex operators
+    face_list = []      #List for all terms from face operators
+    pauli_list = []     #List for all terms from pauli operators
+    for face_bond_op in self.face_bond_op_list:
+      face_list.append(face_bond_op.get_terms(config))
+    for vertex_bond_op in self.vertex_bond_op_list:
+      vertex_list.append(vertex_bond_op.get_terms(config))
+    for pauli_bond_op in self.pauli_bond_op_list:
+      pauli_list.append(pauli_bond_op.get_terms(config))
+    all_terms_list = vertex_list + face_list + pauli_list
+    cs, matrix_elements = zip(*all_terms_list)
     return jax.tree_leaves(cs), jax.tree_leaves(matrix_elements)
 
 #@title Define Class for Exponential Model Hamiltonian

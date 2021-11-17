@@ -3,12 +3,19 @@ import jax
 import jax.numpy as jnp
 import math
 import numpy as np
+import functools
+from typing import Any, Callable, Tuple, Union
+PyTree = Any
 
 # Some utilities borrowed from jax.cfd codebase. 
 
 round_to_n = lambda x, n: x if x == 0 else round(x, -int(math.floor(math.log10(abs(x)))) + (n - 1))
 round_to_2 = lambda x: round_to_n(x, 2)
-
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx], idx
+    
 def split_key(key, new_shape):
   new_shape = np.array(new_shape)
   # keys_dim = new_shape[:-1]
@@ -53,5 +60,54 @@ def stack_along_axis(pytrees, axis):
   stack_leaves_fn = lambda *args: jnp.stack(args, axis)
   return jax.tree_map(stack_leaves_fn, *pytrees)
 
+def split_axis(
+    inputs: PyTree,
+    axis: int,
+    keep_dims: bool = False
+) -> Tuple[PyTree, ...]:
+  """Splits the arrays in `inputs` along `axis`.
+  Args:
+    inputs: pytree to be split.
+    axis: axis along which to split the `inputs`.
+    keep_dims: whether to keep `axis` dimension.
+  Returns:
+    Tuple of pytrees that correspond to slices of `inputs` along `axis`. The
+    `axis` dimension is removed if `squeeze is set to True.
+  Raises:
+    ValueError: if arrays in `inputs` don't have unique size along `axis`.
+  """
+  arrays, tree_def = jax.tree_flatten(inputs)
+  axis_shapes = set(a.shape[axis] for a in arrays)
+  if len(axis_shapes) != 1:
+    raise ValueError(f'Arrays must have equal sized axis but got {axis_shapes}')
+  axis_shape, = axis_shapes
+  splits = [jnp.split(a, axis_shape, axis=axis) for a in arrays]
+  if not keep_dims:
+    splits = jax.tree_map(lambda a: jnp.squeeze(a, axis), splits)
+  splits = zip(*splits)
+  return tuple(jax.tree_unflatten(tree_def, leaves) for leaves in splits)
+
 def shape_structure(pytree):
   return jax.tree_map(lambda x: x.shape, pytree)
+
+def iterate_batch(fn, samples, axis, batch=30):
+  # we have contract that all leafs of samples have the same `axis` dim;
+  # we can write a check that this is true and extract that value;
+  # if that value is less or eq than batch, just return fn(samples)
+  # otherwise use your code;
+  dim_axis = jax.tree_leaves(shape_structure(samples))[axis]
+  if dim_axis < batch:
+    return fn(*samples)
+  sections = dim_axis // batch 
+  # print(sections)
+  split_fn = functools.partial(jnp.array_split, indices_or_sections=sections, axis=axis)
+  batched_inputs = jax.tree_map(lambda x: jnp.stack(split_fn(x), axis=0), samples)
+  # print(shape_structure(batched_inputs))
+  batched_inputs_list = split_axis(batched_inputs, axis=0)
+  # print(shape_structure(batched_inputs_list))
+  # print(batched_inputs)
+  batched_results = []
+  for inputs in batched_inputs_list:
+    results = fn(*inputs)
+    batched_results.append(results)
+  return concat_along_axis(batched_results, axis=0)

@@ -42,3 +42,9 @@ def create_bond_list(size, lattice_vectors = {(0, 1), (1,0)},
   # print(f"The list of bonds for {input_bond_list} is")
   # print(f"{final_indices}")
   return jnp.asarray(final_indices)     # Need to keep jnp because later indexing this using jnp array
+
+def get_wilson_loop(spin_shape, direction):
+  num_spins = spin_shape[0] * spin_shape[1]
+  c_vector = np.arange(0, num_spins, 1)
+  c_graph = np.reshape(c_vector, spin_shape)  
+  return (c_graph[1, :], c_graph[::2, 0])[direction]    

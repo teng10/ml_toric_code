@@ -30,11 +30,9 @@ def propose_move_fn(key, config, p, vertex_bonds):
   def _propse_vertex_flips(key, config):
     num_bonds = vertex_bonds.shape[0]
     vertex = jax.random.randint(key, (1,), minval=0, maxval=num_bonds)
-    # return vertex_bonds[tuple(vertex)]
     return vertex_bonds[vertex]
 
   new_key, sub_key = jax.random.split(key, num=2)
-  # random_num = jax.random.uniform(sub_key, shape=(1,))
   random_num = jax.random.uniform(sub_key)
   condition = random_num < p
   proposed_move = jnp.where(condition, _propse_spin_flips(new_key, config), 
@@ -42,7 +40,7 @@ def propose_move_fn(key, config, p, vertex_bonds):
 
   return proposed_move
 
-def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move_fn, make_move_fn, p):
+def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move_fn, make_move_fn):
   """
   For a given chain with initial 'config', attempts to walk 'len_chain' steps and return 'new_config'. 
   p: probability of propsing spin flips
@@ -53,7 +51,8 @@ def update_chain(key, config, psi_c, model_params, len_chain, psi,  propose_move
     rngs = inputs
     rng1, rng2 = rngs       #Define the splitted keys for making moves and update config
 
-    move = propose_move_fn(rng1, config, p)     #Propose a move
+    # move = propose_move_fn(rng1, config, p)     #Propose a move
+    move = propose_move_fn(rng1, config)     #Propose a move
     config_propose = make_move_fn(config, move)       #Make the move
     new_config, new_psi, condition = _update_config(rng2, config, 
                                                    config_propose, psi_c, psi, model_params) #Update config

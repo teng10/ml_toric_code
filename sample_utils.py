@@ -13,6 +13,11 @@ def init_samples(rng, n_sites, batch_size=1):
     return jnp.squeeze(cs, axis=0)
   return cs
 
+def spin_flip_sampling(config, bond):
+  "Create spin flips"
+  new_config = jax.ops.index_update(config, bond, config[bond] * (-1))
+  return new_config
+
 #@title Define Potential Sampling Methods
 def vertex_bond_sample(config, bond):
   "Act with pauliX/PauliY operator"
