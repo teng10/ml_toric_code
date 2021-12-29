@@ -11,15 +11,17 @@ import mcmc
 
 def compute_overlap_exact(w_psi, w_phi, psi, phi, spin_shape, batch_size=100):
   def overlap_fn(psis, phis):
-    return jnp.mean(jnp.conjugate(psis) * phis)
+    return np.mean(np.conjugate(psis) * phis)
   
   def norm_fn(psis):
-    return jnp.mean(jnp.abs(psis)**2)
+    return np.mean(np.abs(psis)**2)
 
   # Define vectorized psis
   psi_vectorized = jax.vmap(psi, in_axes=(None, 0))
+  psi_vectorized = jax.jit(psi_vectorized)
 
   phi_vectorized = jax.vmap(phi, in_axes=(None, 0))
+  phi_vectorized = jax.jit(phi_vectorized)
   
   # Define batched configs
   (shape_x, shape_y) = spin_shape
@@ -38,8 +40,8 @@ def compute_overlap_exact(w_psi, w_phi, psi, phi, spin_shape, batch_size=100):
     batch_sizes.append(config_batch_size)
 
     # Compute psis, phis
-    psis = psi_vectorized(w_psi, configs)
-    phis = phi_vectorized(w_phi, configs)  
+    psis = jax.device_get(psi_vectorized(w_psi, configs))
+    phis = jax.device_get(phi_vectorized(w_phi, configs))  
 
     # Compute overlap and norm
     overlap = overlap_fn(psis, phis)
@@ -50,12 +52,12 @@ def compute_overlap_exact(w_psi, w_phi, psi, phi, spin_shape, batch_size=100):
     new_norm_psis.append(norm_psi)
     new_norm_phis.append(norm_phi)
 
-  fraction_list = jnp.array(batch_sizes) / batch_size
-  overlap = jnp.mean(fraction_list * jnp.array(new_overlaps))
-  norm_psi = jnp.mean(fraction_list * jnp.array(new_norm_psis))
-  norm_phi = jnp.mean(fraction_list * jnp.array(new_norm_phis))
+  fraction_list = np.array(batch_sizes) / batch_size
+  overlap = np.mean(fraction_list * np.array(new_overlaps))
+  norm_psi = np.mean(fraction_list * np.array(new_norm_psis))
+  norm_phi = np.mean(fraction_list * np.array(new_norm_phis))
 
-  return jnp.sqrt(jnp.abs(overlap)**2 / (norm_psi * norm_phi)), 0, 0      # overlap, std, num_accepts
+  return np.sqrt(np.abs(overlap)**2 / (norm_psi * norm_phi)), 0, 0      # overlap, std, num_accepts
 
 
 def compute_overlap_mcmc( 

@@ -84,13 +84,12 @@ def estimate_operator(key,
   # wilson_loop = operators.WilsonLXBond(bond=bonds.get_wilson_loop(spin_shape, direction))
   # Define propose move fn
   vertex_bonds = tc_utils.get_vertex_bonds(spin_shape)
-  propose_move_fn = functools.partial(mcmc.propose_move_fn, vertex_bonds=vertex_bonds)    
+  propose_move_fn = functools.partial(mcmc.propose_move_fn, vertex_bonds=vertex_bonds, p=p_spinflips)    
 
   # First burn update chain function
   update_chain_fn = functools.partial(mcmc.update_chain,        #vmap update_chain for first burn
                                       psi=psi_apply, 
-                                      propose_move_fn=propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample, 
-                                      p=p_spinflips)
+                                      propose_move_fn=propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample)
   update_chain_vectorized = jax.vmap(update_chain_fn, in_axes=(0, 0, 0, None, None))
   # First burn for configs and psis
   key1, key2 = jax.random.split(sub_key, 2)

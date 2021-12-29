@@ -30,8 +30,24 @@ def similarity_fn(w1, w2):
 	V_max = _S_max(V_array_1, V_array_2)
 	return (1. + (F_max + V_max) / 2.) /2. 
 
+def similarity_fn_prod(w1, w2):
+	"""
+	Takes param dictionaries w1, w2, return similarity
+	"""
+	def _S_max(array1, array2):
+		w_difference_cos = jnp.array([jnp.cos(2. * (array1 - array2)), jnp.cos(2. * (-array1 - array2))])
+		w_cos_mean = jnp.mean(w_difference_cos, axis=1)
+		w_cos_max = jnp.max(w_cos_mean, axis=0)
+		return jnp.prod(w_cos_max)
+	F_array_1, V_array_1 = extract_V_F_params(w1)
+	F_array_2, V_array_2 = extract_V_F_params(w2)
+	F_max = _S_max(F_array_1, F_array_2)
+	V_max = _S_max(V_array_1, V_array_2)
+	return (1. + (F_max + V_max) / 2.) /2. 	
+
 def kernel_fn(similarity, epsilon):
-	return jnp.exp(-(1. - similarity) / (2. * epsilon))
+	# return jnp.exp(-(1. - similarity) / (2. * epsilon))
+	return jnp.exp(-(jnp.ones_like(similarity) - similarity) / (2. * epsilon))
 
 # def kernel_fn(w1, w2, epsilon):
 # 	return jnp.exp(-(1. - similarity_fn(w1, w2)) / (2. * epsilon))
@@ -63,7 +79,7 @@ def kernel_fn(similarity, epsilon):
 # 	A_mat = K_mat / jnp.sqrt(jnp.outer(z1, z2))
 # 	return K_mat, A_mat
 
-def transition_mat(K_mat, epsilon, return_z=False):
+def transition_mat(K_mat, return_z=False):
 	"""Return both kernal matrix and a similar matrix A (which is symmetric)"""
 	# K_mat = kernel_mat(all_w, epsilon)
 	z1 = jnp.sum(K_mat, axis=1)

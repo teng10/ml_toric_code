@@ -11,6 +11,15 @@ PyTree = Any
 
 round_to_n = lambda x, n: x if x == 0 else round(x, -int(math.floor(math.log10(abs(x)))) + (n - 1))
 round_to_2 = lambda x: round_to_n(x, 2)
+
+def _normalize_axis(axis: int, ndim: int) -> int:
+  """Validates and returns positive `axis` value."""
+  if not -ndim <= axis < ndim:
+    raise ValueError(f'invalid axis {axis} for ndim {ndim}')
+  if axis < 0:
+    axis += ndim
+  return axis
+
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -36,7 +45,7 @@ def get_pack_unpack_fns(pytree):
   flat, treedef = jax.tree_flatten(pytree)
   shapes = [f.shape for f in flat]
   flat = [f.ravel() for f in flat]
-  splits = np.cumsum(np.array([f.shape[0] for f in flat]))[:-1]
+  splits = tuple(np.cumsum(np.array([f.shape[0] for f in flat]))[:-1])
 
   def pack_fn(pytree):
     flat, _ = jax.tree_flatten(pytree)
@@ -46,6 +55,7 @@ def get_pack_unpack_fns(pytree):
 
   def unpack_fn(array):
     split = jnp.split(array, splits, 0)
+    # split = jnp.split(array, tuple(splits), 0)
     split = [s.reshape(new_shape) for s, new_shape in zip(split, shapes)]
     return jax.tree_unflatten(treedef, split)
   return pack_fn, unpack_fn
@@ -86,6 +96,35 @@ def split_axis(
     splits = jax.tree_map(lambda a: jnp.squeeze(a, axis), splits)
   splits = zip(*splits)
   return tuple(jax.tree_unflatten(tree_def, leaves) for leaves in splits)
+
+def slice_along_axis(
+    inputs: PyTree,
+    axis: int,
+    idx: Union[slice, int],
+    expect_same_dims: bool = True
+) -> PyTree:
+  """Returns slice of `inputs` defined by `idx` along axis `axis`.
+  Args:
+    inputs: array or a tuple of arrays to slice.
+    axis: axis along which to slice the `inputs`.
+    idx: index or slice along axis `axis` that is returned.
+    expect_same_dims: whether all arrays should have same number of dimensions.
+  Returns:
+    Slice of `inputs` defined by `idx` along axis `axis`.
+  """
+  arrays, tree_def = jax.tree_flatten(inputs)
+  ndims = set(a.ndim for a in arrays)
+  if expect_same_dims and len(ndims) != 1:
+    raise ValueError('arrays in `inputs` expected to have same ndims, but have '
+                     f'{ndims}. To allow this, pass expect_same_dims=False')
+  sliced = []
+  for array in arrays:
+    ndim = array.ndim
+    slc = tuple(idx if j == _normalize_axis(axis, ndim) else slice(None)
+                for j in range(ndim))
+    sliced.append(array[slc])
+  return jax.tree_unflatten(tree_def, sliced)
+
 
 def shape_structure(pytree):
   return jax.tree_map(lambda x: x.shape, pytree)

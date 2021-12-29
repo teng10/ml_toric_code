@@ -20,22 +20,24 @@ def propose_param_fn(key, param_dict, p_mpar, amp_noise):
 	# return jnp.where(condition, tc_utils.generate_m_particles_param(key_propose, param_dict),
 	# 	tc_utils.generate_uniform_noise_param(key_propose, param_dict, amp_noise))
 
-def _accept_E_fn(key, param, param_propse, energy_param, energy_propose, T):
+def _accept_E_fn(key, energy_param, energy_propose, T, return_diff=False):
 	"""Return condition of acceptance."""
 	energy_diff = - (energy_propose - energy_param) / T
 	random_num = jax.random.uniform(key, shape=energy_diff.shape)
 	random_num_log = jnp.log(random_num)
+	if return_diff:
+		return energy_diff > random_num_log, energy_diff
 	return energy_diff > random_num_log
 
 def _update_param(
 	key, 
 	param, param_propse, energy_param, 
 	accept_fn, 
-	estimate_ET_fn		):
+	estimate_ET_fn):
 	"""Note that energy already implicitly has T."""
 	key_accept, key_E = jax.random.split(key, 2)
 	energy_propose, *energy_others = estimate_ET_fn(key_E, param_propse)
-	condition = accept_fn(key_accept, param, param_propse, energy_param, energy_propose)
+	condition = accept_fn(key_accept, energy_param, energy_propose)
 	# param_new = jnp.where(condition, param_propse, param)
 	# energy_new = jnp.where(condition, energy_propose, energy_param)
 	param_new = jax.lax.cond(condition, lambda _: param_propse, lambda _: param, None)
