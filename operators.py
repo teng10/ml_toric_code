@@ -16,6 +16,15 @@ class FixedOperators():
     mat_eles = jnp.stack(mat_eles, axis=0)
     return jnp.sum(psi_newconfigs * mat_eles )
 
+  def get_apply_psi(self, psi):
+    def _evaluate_h_psi(model_params, config):
+      "Return amplitude: <c|H|psi>"
+      vectorized_psi = jax.vmap(psi, in_axes=(None, 0))
+      new_configs, mat_eles = self.get_terms(config)
+      psi_newconfigs = vectorized_psi(model_params, jnp.stack(new_configs, axis=0))
+      mat_eles = jnp.stack(mat_eles, axis=0)
+      return jnp.sum(psi_newconfigs * mat_eles )
+    return _evaluate_h_psi
 
 #@title Define Class for Bond Operators
 

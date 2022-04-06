@@ -9,7 +9,7 @@ import mcmc
 import numpy as np
 
 def MCMC_optimization(key, init_batched_cs, init_batched_psis, psi, init_params, opt_update, init_opt_state, num_steps, 
-                      len_chain, propose_move_fn, make_move_fn, ham, learning_rate):
+                      len_chain, propose_move_fn, make_move_fn, ham, learning_rate, regulation=None):
   def _MCMC_step(carry, inputs):
     """
     Return new_chains, new_psis, num_accepts, new_model_params, energy, for a single step after walking 'len_chain' 
@@ -26,6 +26,8 @@ def MCMC_optimization(key, init_batched_cs, init_batched_psis, psi, init_params,
     (grad_energy_expectation, energy_expectation, grad_psi_expectation, grad_psi_batch) = train_utils.grad_energy_expectation_gradbatch_fn(
                                                                     new_batch_configs, new_batch_psis, 
                                                                     psi, carried_model_params, ham) 
+    if regulation is not None:
+      grad_energy_expectation = jax.tree_map(lambda x, y: x - regulation * y, grad_energy_expectation, carried_model_params)
     # Transform the gradients using the optimiser.
     updates, opt_state = opt_update(grad_energy_expectation, carried_opt_state, carried_model_params)
     # Update parameters.

@@ -47,4 +47,14 @@ def get_wilson_loop(spin_shape, direction):
   num_spins = spin_shape[0] * spin_shape[1]
   c_vector = np.arange(0, num_spins, 1)
   c_graph = np.reshape(c_vector, spin_shape)  
-  return (c_graph[1, :], c_graph[::2, 0])[direction]    
+  return (c_graph[1, :], c_graph[::2, 0])[direction]  
+
+def wilson_loops(spin_shape, direction, index):
+  '''
+  Direction is along x or y
+  Index is the number of row/col
+  '''
+  num_spins = spin_shape[0] * spin_shape[1]
+  c_vector = np.arange(0, num_spins, 1)
+  c_graph = np.reshape(c_vector, spin_shape)  
+  return (c_graph[index * 2 + 1, :], c_graph[::2, index])[direction]    

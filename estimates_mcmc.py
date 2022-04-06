@@ -71,7 +71,7 @@ def estimate_operator(key,
                     p_spinflips=0.4, 
                     return_psi_cs=False):
   """
-  Return <E> via mcmc sampling. Inlcude first burn for equalibriating samples. 
+  Return <O> via mcmc sampling. Inlcude first burn for equalibriating samples. 
   """
   num_spins = spin_shape[0] * spin_shape[1]
   new_key, sub_key = jax.random.split(key, 2)
@@ -106,3 +106,59 @@ def estimate_operator(key,
   if return_psi_cs:
     return op_ev, op_std, jnp.mean(num_accepts/len_chain), op_local_batch, new_batch_configs, new_batch_psis,
   return op_ev, op_std, jnp.mean(num_accepts/len_chain), op_local_batch
+
+def estimate_operator_dict(key, 
+                    param,   
+                    operator_dict, 
+                    psi_apply, 
+                    len_chain, 
+                    len_chain_first_burn,
+                    spin_shape, 
+                    num_samples,
+                    propose_move_fn=mcmc.propose_move_fn, 
+                    make_move_fn=sample_utils.vertex_bond_sample, 
+                    p_spinflips=0.4, 
+                    return_psi_cs=False):
+  """
+  Return <O> via mcmc sampling. Inlcude first burn for equalibriating samples. 
+  """
+  num_spins = spin_shape[0] * spin_shape[1]
+  new_key, sub_key = jax.random.split(key, 2)
+  # Generate initial configs for mcmc
+  init_configs = sample_utils.init_samples(new_key, num_spins, num_samples)
+  psi_apply_vec = jax.vmap(psi_apply, in_axes=(None, 0))
+  init_psis = psi_apply_vec(param, init_configs)
+  # # Set up hamiltonian
+  # ham = tc_utils.set_up_ham_field(spin_shape, h_field)
+  # wilson_loop = operators.WilsonLXBond(bond=bonds.get_wilson_loop(spin_shape, direction))
+  # Define propose move fn
+  vertex_bonds = tc_utils.get_vertex_bonds(spin_shape)
+  propose_move_fn = functools.partial(mcmc.propose_move_fn, vertex_bonds=vertex_bonds, p=p_spinflips)    
+
+  # First burn update chain function
+  update_chain_fn = functools.partial(mcmc.update_chain,        #vmap update_chain for first burn
+                                      psi=psi_apply, 
+                                      propose_move_fn=propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample)
+  update_chain_vectorized = jax.vmap(update_chain_fn, in_axes=(0, 0, 0, None, None))
+  # First burn for configs and psis
+  key1, key2 = jax.random.split(sub_key, 2)
+  rngs_first_burn = utils.split_key(key1, (num_samples, 2))
+  rngs = utils.split_key(key2, (num_samples, 2))
+  first_burn_configs, first_burn_psis, num_accepts = update_chain_vectorized(rngs_first_burn, 
+                                                    init_configs, init_psis, param, len_chain_first_burn)  
+
+  #Equilibrate chains   
+  new_batch_configs, new_batch_psis, num_accepts = update_chain_vectorized(rngs, 
+                                            first_burn_configs, first_burn_psis, param, len_chain)                                                                                      
+  # Compute expectation values using equilibriated cs and psis     
+  op_ev_dict = {}
+  op_std_dict = {}
+  op_local_batch_dict = {}
+  for key, op in operator_dict.items():                                               
+    op_ev, op_std, op_local_batch = eval_utils.op_expectation_fn(new_batch_configs, new_batch_psis, psi_apply, param, op)
+    op_ev_dict[key] = op_ev
+    op_std_dict[key] = op_std
+    op_local_batch_dict[key] = op_local_batch
+  if return_psi_cs:
+    return op_ev_dict, op_std_dict, op_local_batch_dict, jnp.mean(num_accepts/len_chain), new_batch_configs, new_batch_psis,
+  return op_ev_dict, op_std_dict, op_local_batch_dict, jnp.mean(num_accepts/len_chain)  

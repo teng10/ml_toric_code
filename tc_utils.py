@@ -2,6 +2,7 @@
 import numpy as np
 import jax
 import jax.numpy as jnp
+import haiku as hk
 import operators
 import bonds
 import sample_utils
@@ -24,12 +25,24 @@ def get_rbm_params(sector):
   weight_list = [np.pi / 4. * np.array([1., 1., 1., 1.]), 
           np.pi / 4. * np.array([1., -1., 1., 1.]), 
           np.pi / 4. * np.array([-1., 1., 1., 1.]), 
-          np.pi / 4. * np.array([-1., -1., 1., 1.])]
-  bias_list = np.array([0., np.pi / 2., np.pi / 2., 0.])
+          np.pi / 4. * np.array([-1., -1., 1., 1.]), 
+          np.array([0., 0., 0., 0.])]
+  bias_list = np.array([0., np.pi / 2., np.pi / 2., 0., 0.])
   wF = weight_list[sector-1]
   bF = np.array([bias_list[sector-1]])
 
   return {'rbm':dict(bF=bF, wF=wF, bV=np.array([0.]), wV=np.zeros(4))}
+
+def get_cnn_params(sector):
+  weight_list = [np.pi / 4. * np.array([[1., 0.], [1., 1.], [1., 0.]]), 
+              np.pi / 4. *  np.array([[1., 0.], [-1., 1.], [1., 0.]]), 
+              np.pi / 4. *  np.array([[-1., 0.], [1., 1.], [1., 0.]]), 
+              np.pi / 4. *  np.array([[-1., 0.], [-1., 1.], [1., 0.]])]
+  bias_list = np.array([0., np.pi / 2., np.pi / 2., 0., 0.])
+  wF = np.expand_dims(np.expand_dims(weight_list[sector-1], -1), -1)
+  bF = np.array([bias_list[sector-1]])
+
+  return {'rbm_cnn/~/F':dict(b=bF, w=wF), 'rbm_cnn/~/V':dict(b=np.array([0.]), w=np.zeros((3, 2, 1, 1)))}    
 
 def get_params_zeeman():
   b = np.array([np.pi / 4.])
@@ -113,6 +126,25 @@ def generate_local_noise_param(key, param_dict, amp_noise, return_flips=False):
     return jax.tree_map(lambda x, y: x + y, param_dict, flip_dict), spin_flip
   return jax.tree_map(lambda x, y: x + y, param_dict, flip_dict)
 
+def generate_FV_noise_param(key, param_dict, amp_noise, return_noise=False):
+  model_name = 'rbm_noise'
+  assert 'rbm_noise' in param_dict.keys(), "Model is not 'rbm_noise'."
+  shape = jax.tree_leaves(utils.shape_structure(param_dict))[-2:]
+  key_noise, key_local = jax.random.split(key, 2)
+  param_arrays, tree_def = jax.tree_flatten(param_dict)
+  rngs = jax.random.split(key_noise, len(param_arrays))
+  noise_values = [
+      jax.random.uniform(k, [p.shape[0]], minval=-amp_noise, maxval=amp_noise)
+      for k, p in zip(rngs, param_arrays)
+  ]
+  random_location = jax.random.randint(key_local, (2,), minval=0, maxval=shape[0]-1)
+  modified_params = [param.at[..., random_location[0], random_location[1]].add(noise) for param, noise in zip(param_arrays, noise_values)]
+  noise_dict = jax.tree_unflatten(tree_def, noise_values)
+  param_dict = jax.tree_unflatten(tree_def, modified_params)
+  if return_noise:
+    return param_dict, noise_dict
+  return param_dict
+
 def generate_m_particles_param(key, param_dict, return_flips=False):
   model_name = 'rbm_noise'
   assert 'rbm_noise' in param_dict.keys(), "Model is not 'rbm_noise'."
@@ -134,13 +166,25 @@ def generate_m_particles_param(key, param_dict, return_flips=False):
     return jax.tree_map(lambda x, y: x * y, param_dict, flip_dict), spin_flip
   return jax.tree_map(lambda x, y: x * y, param_dict, flip_dict)
 
+def propose_param_fn(key, param_dict, p_mpar, amp_noise):
+  """Propose with probabilty p_mpar m particle excitations; otherwise random noise. 
+
+  Returns:
+  array representing a packed `tree` and `unpack` function.
+  """ 
+  key_flip, key_propose = jax.random.split(key, 2)
+  random_num = jax.random.uniform(key_flip)
+  condition = random_num < p_mpar
+  return jax.lax.cond(condition, lambda _: generate_m_particles_param(key_propose, param_dict), 
+    lambda _: generate_FV_noise_param(key_propose, param_dict, amp_noise), None)  
+
 def get_face_bonds(spin_shape):
 	return bonds.create_bond_list(size=(spin_shape[0], spin_shape[1]), input_bond_list=[(0,0), (1, 0), (2, 0), (1,1)])
 
 def get_vertex_bonds(spin_shape):
 	return bonds.create_bond_list(size=(spin_shape[0], spin_shape[1]), input_bond_list=[(1,0), (2, 0), (3, 0), (2, spin_shape[0]-1)]) #fixed bug for odd lattices
 
-def set_up_ham_field(spin_shape, h_z):
+def set_up_ham_field(spin_shape, h_z, Jv=1., Jf=1.):
   #Set up hamiltonian in field h_z
   num_col =  spin_shape[1]
   num_row = spin_shape[0]
@@ -149,10 +193,10 @@ def set_up_ham_field(spin_shape, h_z):
   vertex_operator_bonds = get_vertex_bonds(spin_shape) 
   pauli_operator_bonds = np.arange(0, num_spins, 1)
   # Define hamiltonian 
-  myham = operators.ToricCodeHamiltonian(Jv=1., Jf=1., h = h_z, face_bonds = face_operator_bonds, vertex_bonds=vertex_operator_bonds, pauli_bonds=pauli_operator_bonds)  
+  myham = operators.ToricCodeHamiltonian(Jv=Jv, Jf=Jf, h = h_z, face_bonds = face_operator_bonds, vertex_bonds=vertex_operator_bonds, pauli_bonds=pauli_operator_bonds)  
   return myham
 
-def set_up_ham_field_rotated(spin_shape, h, angle):
+def set_up_ham_field_rotated(spin_shape, h, angle, Jv=1., Jf=1.):
   hz = h * jnp.cos(angle)
   hx = h * jnp.sin(angle)
   num_col =  spin_shape[1]
@@ -162,7 +206,7 @@ def set_up_ham_field_rotated(spin_shape, h, angle):
   vertex_operator_bonds = get_vertex_bonds(spin_shape) 
   pauli_operator_bonds = jnp.arange(0, num_spins, 1)
   # Define hamiltonian 
-  myham = operators.ToricCodeHamiltonianRotated(Jv=1., Jf=1., h = hz, hx = hx, face_bonds = face_operator_bonds, vertex_bonds=vertex_operator_bonds, pauli_bonds=pauli_operator_bonds)  
+  myham = operators.ToricCodeHamiltonianRotated(Jv=Jv, Jf=Jf, h = hz, hx = hx, face_bonds = face_operator_bonds, vertex_bonds=vertex_operator_bonds, pauli_bonds=pauli_operator_bonds)  
   return myham  
 
 def stack_F_V_img(x_2d):
@@ -194,4 +238,29 @@ def stack_F_V_img(x_2d):
   x_vertexbond = stacked_x[:,::2, :]
   return x_facebond, x_vertexbond
 
+def set_partial_params_const(pytree, names_list, c, model_name='rbm_noise'):
+  """Set paramsters in `names_list` to a constant `c` of the same shape. 
+  The pytree is assumed to have the same structure as `rbm_noise` model.
+
+  Args:
+    pytree: pytree to be modified.
+    names_list: a list of names of parameters to be modified.
+    c: constant. 
+    model_name: default is `rbm_noise` model.
+
+  Returns:
+    A new pytree with paramteres modified to constant `c`.
+  """  
+  # to-do: can we write a general function targeting parameters with certain name?
+  # param_arrays, tree_def = jax.tree_flatten(pytree)
+  # print(tree_def)
+  # print(jax.tree_util.tree_structure(pytree))
+  # print(jax.tree_util.treedef_tuple(tree_def))
+
+  mutable_pytree = hk.data_structures.to_mutable_dict(pytree)
+  for name in names_list:
+    mutable_pytree[model_name][name] = jnp.zeros_like(pytree[model_name][name])
+
+  return dict(mutable_pytree)
+  # return hk.data_structures.to_haiku_dict(mutable_pytree)
  
