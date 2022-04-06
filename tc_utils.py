@@ -112,7 +112,8 @@ def generate_local_noise_param(key, param_dict, amp_noise, return_flips=False):
   key_spin, key_noise = jax.random.split(key, 2)
   spin_flip = jax.random.randint(key_spin, shape=(1,), minval=0, maxval=num_spins)
   noise = jax.random.uniform(key_noise, (), minval=-amp_noise, maxval=amp_noise)
-  config_flipped = jax.ops.index_update(config, spin_flip, noise)
+  # config_flipped = jax.ops.index_update(config, spin_flip, noise)
+  config_flipped = jnp.asarray(config).at[spin_flip].set(noise)
   config_2d = einops.rearrange(config_flipped, '(x y) -> x y', x=shape[0]*2, y=shape[1])
   x_facebond, x_vertexbond = stack_F_V_img(config_2d)
   assert x_facebond.shape ==param_dict[model_name]['wF'].shape, "Spin flips and wF have different shape."
