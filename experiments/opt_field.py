@@ -1,4 +1,9 @@
 import opt_utils
+import numpy as np
+import haiku as hk
+import re
+import datetime
+import pickle
 
 h_step = 0.1
 h_field_array=np.round(np.arange(0, .2, h_step), 2)
@@ -20,7 +25,7 @@ energy_steps_list = []
 init_param_list = []
 for i in range(iterations): 
   main_key = next(rng_seq)
-  params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param = optimization_field.main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
+  params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param = opt_utils.main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
                                                                                                         spin_shape=spin_shape, num_chains=300, num_steps=450, 
                                                           first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.005, spin_flip_p=.4, main_key=main_key, 
                                                           angle=angle, model_name=model_name, sector=sector)
