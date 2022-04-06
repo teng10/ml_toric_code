@@ -1,4 +1,4 @@
-import opt_utils
+#import opt_utils
 import re
 import datetime
 
@@ -40,12 +40,12 @@ import train_utils
 import sample_utils
 import mcmc
 import optimizations
-import plot_utils
+#import plot_utils
 import overlaps
 import diffusion_map
 import estimates_mcmc
 import mcmc_param
-import notebook_fn
+#import notebook_fn
 
 #@title main fixed angle
 def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains, num_steps, first_burn_len, 
@@ -184,7 +184,7 @@ energy_steps_list = []
 init_param_list = []
 for i in range(iterations): 
   main_key = next(rng_seq)
-  params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param = opt_utils.main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
+  params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param = main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
                                                                                                         spin_shape=spin_shape, num_chains=300, num_steps=450, 
                                                           first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.005, spin_flip_p=.4, main_key=main_key, 
                                                           angle=angle, model_name=model_name, sector=sector)
