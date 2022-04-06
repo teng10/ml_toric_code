@@ -1,4 +1,4 @@
-from experiments import optimization_field
+import opt_utils
 
 h_step = 0.1
 h_field_array=np.round(np.arange(0, .2, h_step), 2)
