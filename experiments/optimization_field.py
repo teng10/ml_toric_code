@@ -25,8 +25,8 @@ import math
 
 #@title main fixed angle
 def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains, num_steps, first_burn_len, 
-                        len_chain, learning_rate, spin_flip_p, angle, regulation, 
-                        main_key, sector=None, Jf=1., model_name=None, epsilon_carry=0.3):
+                        len_chain, learning_rate, spin_flip_p, angle, 
+                        main_key, sector=None, Jf=1., model_name=None, epsilon_carry=0.):
   # Full optimization for each field value
   def _update_fields(carry, inputs):
     # Initialize params and configs, psis from previous field
@@ -60,7 +60,7 @@ def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains,
     # Define partial MCMC_optimization fn
     MCMC_optimization_fn = functools.partial(optimizations.MCMC_optimization, psi=psi_apply, init_params=carried_params, opt_update=opt_update, init_opt_state=opt_state, num_steps=num_steps, 
                                              len_chain=len_chain, propose_move_fn=propose_move_fn, make_move_fn=sample_utils.vertex_bond_sample, ham=myham,
-                                                                                                              learning_rate=learning_rate, regulation=regulation)
+                                                                                                              learning_rate=learning_rate)
     #compile with jit
     MCMC_optimization_jit = jax.jit(MCMC_optimization_fn)
 
@@ -75,6 +75,8 @@ def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains,
     model = hk.without_apply_rng(hk.transform(wavefunctions.fwd_noise))
   elif model_name == 'rbm': 
     model = hk.without_apply_rng(hk.transform(wavefunctions.fwd))
+  elif model_name == 'rbm_cnn': 
+    model = hk.without_apply_rng(hk.transform(wavefunctions.fwd_cnn))
   psi_apply = functools.partial(model.apply, spin_shape=spin_shape)
   psi_apply_vectorized = jax.vmap(psi_apply, in_axes=(None, 0))     #vmap psi  
 
@@ -96,17 +98,24 @@ def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains,
   if sector == None:
     params = model.init(noise_key, spin_shape=spin_shape, x=init_configs[0,...])
   else:
-    rbm_params = tc_utils.get_rbm_params(sector)      # Get initial parameter for sector
-    if model_name == 'rbm_noise':
-      rbm_params = tc_utils.convert_rbm_expanded(rbm_params, (spin_shape[0]//2, spin_shape[1]))
-    params = tc_utils.generate_uniform_noise_param(noise_key, rbm_params, epsilon)
+    if model_name == 'rbm':
+      my_params = tc_utils.get_rbm_params(sector)      # Get initial parameter for sector
+    elif model_name == 'rbm_noise':
+      rbm_params = tc_utils.get_rbm_params(sector)      # Get initial parameter for sector
+      my_params = tc_utils.convert_rbm_expanded(rbm_params, (spin_shape[0]//2, spin_shape[1]))
+    elif model_name == 'rbm_cnn':
+      my_params = tc_utils.get_cnn_params(sector)
+    params = tc_utils.generate_uniform_noise_param(noise_key, my_params, epsilon)
     # params = tc_utils.set_partial_params_const(params, ['wV', 'bV'], 0., model_name=model_name)
-  print(f"Initial parameters are")
-  fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
+
   if model_name == 'rbm_noise':
+    print(f"Initial parameters are")
+    fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
     plot_utils.plot_weights_noise(axs, params, h_field_array[0], 'rbm_noise')
     plt.show()
   elif model_name == 'rbm':
+    print(f"Initial parameters are")
+    fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
     plot_utils.plot_weights(axs, params, h_field_array[0], 'rbm', )
     plt.show()
   new_params = params
@@ -129,3 +138,4 @@ def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains,
 
     print(f"Current energy at h={h_field} is {energy_steps[-1] / num_spins}")
   return new_params_list, energy_density_list, updated_psis, energy_steps_list, psis_list,num_accepts_list, grad_list, params
+  
