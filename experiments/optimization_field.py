@@ -6,21 +6,21 @@ import jax.numpy as jnp
 import functools
 import pickle
 import importlib
-from sklearn.cluster import KMeans
-from sklearn.decomposition import KernelPCA
-from sklearn.metrics import confusion_matrix
+#from sklearn.cluster import KMeans
+#from sklearn.decomposition import KernelPCA
+#from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib import cm
-import seaborn
-import xarray as xr
+#import seaborn
+#import xarray as xr
 import scipy
 from scipy.interpolate import griddata
 from tqdm import tqdm
 import itertools
-import pandas as pd
+#import pandas as pd
 import einops
-import os.path
+#import os.path
 import math
 
 #@title main fixed angle
