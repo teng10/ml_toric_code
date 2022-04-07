@@ -45,8 +45,6 @@ import overlaps
 import diffusion_map
 import estimates_mcmc
 import mcmc_param
-#import notebook_fn
-print("this is a first test.")
 #@title main fixed angle
 def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains, num_steps, first_burn_len, 
                         len_chain, learning_rate, spin_flip_p, angle, 
@@ -165,7 +163,7 @@ def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains,
   
 
 h_step = 0.1
-h_field_array=np.round(np.arange(0, .1, h_step), 2)
+h_field_array=np.round(np.arange(0, .2, h_step), 2)
 angle = 0.
 file_path = '/n/home11/yteng/experiments/optimization/'
 iterations = 3
@@ -183,11 +181,10 @@ energies_list = []
 energy_steps_list = []
 init_param_list = []
 all_results_list = []
-for i in range(iterations): 
-  print("here is a text")
-  main_key = next(rng_seq)
-  #params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
-  results = main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
+#for i in range(iterations): 
+main_key = next(rng_seq)
+#params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
+results = main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
                                                                                                         spin_shape=spin_shape, num_chains=50, num_steps=45, 
                                                           first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.005, spin_flip_p=.4, main_key=main_key, 
                                                           angle=angle, model_name=model_name, sector=sector)
@@ -196,8 +193,11 @@ for i in range(iterations):
 #   energy_steps_list.append(energy_steps)
 #   init_param_list.append(init_param)
 # params_list_stacked = utils.stack_along_axis(params_list_list, 0)
-  all_results_list.append(results)
-  all_results_stacked = utils.stack_along_axis(all_results_list, 0)
+#  all_results_list.append(results)
+ # print(utils.shape_structure(results))
+#all_results_stacked = utils.stack_along_axis(all_results_list, 0)
+#print(utils.shape_structure(all_results_stacked))
+#print(f"len of results stacked is {len(all_results_stacked[0])}")
   
 now = datetime.datetime.now()
 pattern = re.compile(r"-\d\d-\d\d")
@@ -205,6 +205,6 @@ mo = pattern.search(str(now))
 date = mo.group()[1:]
 
 h_field_list = [utils.round_to_2(h) for h in h_field_array]
-field_results_dict = dict(zip(h_field_list, all_results_stacked))
-file_name = f"{date}_results_list_stacked_{spin_shape}_{sector}.p"
-pickle.dump(field_results_dict, open(file_name, 'wb'))
+#field_results_dict = dict(zip(h_field_list, results))
+file_name = f"{date}_results_{spin_shape}_{sector}.p"
+pickle.dump(results, open(file_path + file_name, 'wb'))
