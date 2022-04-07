@@ -46,7 +46,7 @@ import diffusion_map
 import estimates_mcmc
 import mcmc_param
 #import notebook_fn
-
+print("this is a first test.")
 #@title main fixed angle
 def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains, num_steps, first_burn_len, 
                         len_chain, learning_rate, spin_flip_p, angle, 
@@ -184,6 +184,7 @@ energy_steps_list = []
 init_param_list = []
 all_results_list = []
 for i in range(iterations): 
+  print("here is a text")
   main_key = next(rng_seq)
   #params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
   results = main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
