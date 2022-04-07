@@ -46,7 +46,7 @@ import diffusion_map
 import estimates_mcmc
 import mcmc_param
 #@title main fixed angle
-def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains, num_steps, first_burn_len, 
+def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_steps, first_burn_len, 
                         len_chain, learning_rate, spin_flip_p, angle, 
                         main_key, sector=None, Jf=1., model_name=None, epsilon_carry=0.):
   # Full optimization for each field value
@@ -161,50 +161,54 @@ def main_no_carry_angle_flexible(h_field_array, epsilon, spin_shape, num_chains,
     print(f"Current energy at h={h_field} is {energy_steps[-1] / num_spins}")
   return new_params_list, energy_density_list, updated_psis, energy_steps_list, psis_list,num_accepts_list, grad_list, params
   
+def main(argv):
+  print(f'Program has started with args: {argv}')
+  h_step = 0.1
+  h_field_array=np.round(np.arange(0, 0.2, h_step), 2)
+  angle = 0.
+  file_path = '/n/home11/yteng/experiments/optimization/data/'
+  iterations = 3
+  epsilon = 0.2
+  model_name = 'rbm_cnn'
 
-h_step = 0.1
-h_field_array=np.round(np.arange(0, .2, h_step), 2)
-angle = 0.
-file_path = '/n/home11/yteng/experiments/optimization/'
-iterations = 3
-epsilon = 0.2
-model_name = 'rbm_cnn'
 
+  spin_shape = (6,3)
+  num_spins = spin_shape[0] * spin_shape[1]
+  burn_in_factor = 6
+  rng_seq = hk.PRNGSequence(42 + argv[2])
+  sector = argv[1]
+  params_list_list = []
+  energies_list = []
+  energy_steps_list = []
+  init_param_list = []
+  all_results_list = []
+  #for i in range(iterations): 
+  main_key = next(rng_seq)
+  #params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
+  results = _optimize_over_fields(h_field_array=h_field_array, epsilon=epsilon, 
+                                                                                                          spin_shape=spin_shape, num_chains=5, num_steps=4, 
+                                                            first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.005, spin_flip_p=.4, main_key=main_key, 
+                                                            angle=angle, model_name=model_name, sector=sector)
+  #   params_list_list.append(params_list)
+  #   energies_list.append(energy)
+  #   energy_steps_list.append(energy_steps)
+  #   init_param_list.append(init_param)
+  # params_list_stacked = utils.stack_along_axis(params_list_list, 0)
+  #  all_results_list.append(results)
+   # print(utils.shape_structure(results))
+  #all_results_stacked = utils.stack_along_axis(all_results_list, 0)
+  #print(utils.shape_structure(all_results_stacked))
+  #print(f"len of results stacked is {len(all_results_stacked[0])}")
+    
+  now = datetime.datetime.now()
+  pattern = re.compile(r"-\d\d-\d\d")
+  mo = pattern.search(str(now))
+  date = mo.group()[1:]
 
-spin_shape = (6,3)
-num_spins = spin_shape[0] * spin_shape[1]
-burn_in_factor = 6
-rng_seq = hk.PRNGSequence(42)
-sector = 1
-params_list_list = []
-energies_list = []
-energy_steps_list = []
-init_param_list = []
-all_results_list = []
-#for i in range(iterations): 
-main_key = next(rng_seq)
-#params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
-results = main_no_carry_angle_flexible(h_field_array=h_field_array, epsilon=epsilon, 
-                                                                                                        spin_shape=spin_shape, num_chains=50, num_steps=45, 
-                                                          first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.005, spin_flip_p=.4, main_key=main_key, 
-                                                          angle=angle, model_name=model_name, sector=sector)
-#   params_list_list.append(params_list)
-#   energies_list.append(energy)
-#   energy_steps_list.append(energy_steps)
-#   init_param_list.append(init_param)
-# params_list_stacked = utils.stack_along_axis(params_list_list, 0)
-#  all_results_list.append(results)
- # print(utils.shape_structure(results))
-#all_results_stacked = utils.stack_along_axis(all_results_list, 0)
-#print(utils.shape_structure(all_results_stacked))
-#print(f"len of results stacked is {len(all_results_stacked[0])}")
-  
-now = datetime.datetime.now()
-pattern = re.compile(r"-\d\d-\d\d")
-mo = pattern.search(str(now))
-date = mo.group()[1:]
+  h_field_list = [utils.round_to_2(h) for h in h_field_array]
+  field_results_dict = dict(zip(h_field_list, results))
+  file_name = f"{date}_results_{spin_shape}_{sector}_{argv[2]}.p"
+  pickle.dump(results, open(file_path + file_name, 'wb'))
 
-h_field_list = [utils.round_to_2(h) for h in h_field_array]
-#field_results_dict = dict(zip(h_field_list, results))
-file_name = f"{date}_results_{spin_shape}_{sector}.p"
-pickle.dump(results, open(file_path + file_name, 'wb'))
+if __name__ == '__main__':
+  app.run(main)  
