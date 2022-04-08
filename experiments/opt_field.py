@@ -46,6 +46,7 @@ import overlaps
 import diffusion_map
 import estimates_mcmc
 import mcmc_param
+import exact_comp
 #@title main fixed angle
 def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_steps, first_burn_len, 
                         len_chain, learning_rate, spin_flip_p, angle, 
@@ -116,6 +117,7 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
   psis_list = []
   num_accepts_list = []
   grad_list = []
+  exact_energy_list = []
   
   init_configs = sample_utils.init_samples(init_config_key, num_spins, num_chains)     #Create intial chains
   if sector == None:
@@ -152,15 +154,18 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
     new_params = updated_params
     new_configs = updated_configs
     new_psis = updated_psis
+    myham = tc_utils.set_up_ham_field_rotated(spin_shape, h_field, angle, Jf=Jf)
+    exact_energy = exact_comp.compute_op_fn(new_params, psi_apply, myham, num_spins, batch_size=64)
     new_params_list.append(new_params)
     energy_density_list.append(energy_steps[-1] / num_spins)
     energy_steps_list.append(energy_steps / num_spins)
     psis_list.append(updated_psis)
     num_accepts_list.append(num_accepts)
     grad_list.append(grad_energy_expectation)
+    exact_energy_list.append(exact_energy / num_spins)
 
     print(f"Current energy at h={h_field} is {energy_steps[-1] / num_spins}")
-  return new_params_list, energy_density_list, updated_psis, energy_steps_list, psis_list,num_accepts_list, grad_list, params
+  return new_params_list, energy_density_list, exact_energy_list, updated_psis, energy_steps_list, psis_list,num_accepts_list, grad_list, params
   
 def main(argv):
   print(f'Program has started with args: {argv}')
