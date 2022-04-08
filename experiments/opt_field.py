@@ -180,7 +180,7 @@ def main(argv):
 
   spin_shape = (6,3)
   num_spins = spin_shape[0] * spin_shape[1]
-  burn_in_factor = 600
+  burn_in_factor = 6
   rng_seq = hk.PRNGSequence(42 + int(argv[2]))
   sector = int(argv[1])
   params_list_list = []
@@ -192,7 +192,7 @@ def main(argv):
   main_key = next(rng_seq)
   #params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
   results = _optimize_over_fields(h_field_array=h_field_array, epsilon=epsilon, 
-                                                                                                          spin_shape=spin_shape, num_chains=500, num_steps=400, 
+                                                                                                          spin_shape=spin_shape, num_chains=5, num_steps=4, 
                                                             first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.005, spin_flip_p=.4, main_key=main_key, 
                                                             angle=angle, model_name=model_name, sector=sector)
   #   params_list_list.append(params_list)
