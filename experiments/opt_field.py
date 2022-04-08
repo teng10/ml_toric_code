@@ -26,6 +26,7 @@ import itertools
 import einops
 #import os.path
 import math
+from absl import app
 
 import sys
 
@@ -175,7 +176,7 @@ def main(argv):
   spin_shape = (6,3)
   num_spins = spin_shape[0] * spin_shape[1]
   burn_in_factor = 6
-  rng_seq = hk.PRNGSequence(42 + argv[2])
+  rng_seq = hk.PRNGSequence(42 + int(argv[2]))
   sector = argv[1]
   params_list_list = []
   energies_list = []
