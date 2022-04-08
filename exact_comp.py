@@ -39,4 +39,9 @@ def compute_op_fn(psi_param, psi, op, num_sites, batch_size):
   op_psi = op.get_apply_psi(psi)
   op_psi_vec = get_vector(num_sites, batch_size, op_psi, psi_param)
   op_psi_vec_norm = np.linalg.norm(op_psi_vec)
-  return np.vdot(psi_vec, op_psi_vec) / (psi_norm * op_psi_vec_norm)
+  return np.vdot(np.conjugate(psi_vec), op_psi_vec) / (psi_norm **2)
+
+def exact_overlap(v1, v2):
+  norm_1 = np.vdot(v1, v1)
+  norm_2 = np.vdot(v2, v2)
+  return np.abs(np.vdot(v1, v2) / np.sqrt(norm_1 * norm_2))  
