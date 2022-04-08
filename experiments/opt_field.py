@@ -165,7 +165,7 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
     exact_energy_list.append(exact_energy / num_spins)
 
     print(f"Current energy at h={h_field} is {energy_steps[-1] / num_spins}")
-  return new_params_list, energy_density_list, exact_energy_list, updated_psis, energy_steps_list, psis_list,num_accepts_list, grad_list, params
+  return new_params_list, energy_density_list, exact_energy_list, energy_steps_list, num_accepts_list, psis_list, grad_list, params
   
 def main(argv):
   print(f'Program has started with args: {argv}')
@@ -181,8 +181,8 @@ def main(argv):
   spin_shape = (6,3)
   num_spins = spin_shape[0] * spin_shape[1]
   burn_in_factor = 6
-  rng_seq = hk.PRNGSequence(42 + int(argv[2]))
   sector = int(argv[1])
+  rng_seq = hk.PRNGSequence(42 + sector * int(argv[2]))
   params_list_list = []
   energies_list = []
   energy_steps_list = []
@@ -212,9 +212,9 @@ def main(argv):
   date = mo.group()[1:]
 
   h_field_list = [utils.round_to_2(h) for h in h_field_array]
-  field_results_dict = dict(zip(h_field_list, results))
+  field_results_dict = [dict(zip(h_field_list, data)) for data in results]
   file_name = f"{date}_results_{spin_shape}_{sector}_{argv[2]}.p"
-  pickle.dump(results, open(file_path + file_name, 'wb'))
+  pickle.dump(field_results_dict, open(file_path + file_name, 'wb'))
 
 if __name__ == '__main__':
   app.run(main)  
