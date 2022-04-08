@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import itertools
+import functools
 # import notebook_fn
 
 def get_vector(num_sites, batch_size, psi, psi_params):
