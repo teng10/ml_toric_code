@@ -178,7 +178,7 @@ def main(argv):
   h_step = 0.1
   h_field_array=np.round(np.arange(0, 0.2, h_step), 2)
   angle = 0.
-  file_path = '/n/home11/yteng/experiments/optimization/data/argv[3]/'
+  file_path = f'/n/home11/yteng/experiments/optimization/data/{argv[3]}/'
   iterations = 3
   epsilon = 0.2
   model_name = 'rbm_cnn_2'
