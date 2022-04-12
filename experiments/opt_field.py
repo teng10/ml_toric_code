@@ -132,6 +132,10 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
       my_params = tc_utils.convert_rbm_expanded(rbm_params, (spin_shape[0]//2, spin_shape[1]))
     elif model_name == 'rbm_cnn':
       my_params = tc_utils.get_cnn_params(sector)
+    else:
+      # todo: this line needs to be modified
+      _, noise_key_2 = jax.random.split_key(noise_key, 2)
+      my_params = model.init(noise_key_2, spin_shape=spin_shape, x=init_configs[0,...])
     params = tc_utils.generate_uniform_noise_param(noise_key, my_params, epsilon)
     # params = tc_utils.set_partial_params_const(params, ['wV', 'bV'], 0., model_name=model_name)
 
