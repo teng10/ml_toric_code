@@ -170,17 +170,17 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
 def main(argv):
   print(f'Program has started with args: {argv}')
   h_step = 0.1
-  h_field_array=np.round(np.arange(0, 1.1, h_step), 2)
+  h_field_array=np.round(np.arange(0, 0.2, h_step), 2)
   angle = 0.
   file_path = '/n/home11/yteng/experiments/optimization/data/temp/'
   iterations = 3
   epsilon = 0.2
-  model_name = 'rbm_cnn'
+  model_name = 'rbm_cnn_2'
 
 
   spin_shape = (6,3)
   num_spins = spin_shape[0] * spin_shape[1]
-  burn_in_factor = 600
+  burn_in_factor = 6
   sector = int(argv[1])
   rng_seq = hk.PRNGSequence(42 + sector * int(argv[2]))
   params_list_list = []
@@ -192,7 +192,7 @@ def main(argv):
   main_key = next(rng_seq)
   #params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
   results = _optimize_over_fields(h_field_array=h_field_array, epsilon=epsilon, 
-                                                                                                          spin_shape=spin_shape, num_chains=500, num_steps=400, 
+                                                                                                          spin_shape=spin_shape, num_chains=5, num_steps=4, 
                                                             first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.003, spin_flip_p=.4, main_key=main_key, 
                                                             angle=angle, model_name=model_name, sector=sector)
   #   params_list_list.append(params_list)
