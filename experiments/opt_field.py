@@ -101,6 +101,8 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
     model = hk.without_apply_rng(hk.transform(wavefunctions.fwd))
   elif model_name == 'rbm_cnn': 
     model = hk.without_apply_rng(hk.transform(wavefunctions.fwd_cnn))
+  elif model_name == 'rbm_cnn_2': 
+    model = hk.without_apply_rng(hk.transform(wavefunctions.fwd_cnn_2))
   psi_apply = functools.partial(model.apply, spin_shape=spin_shape)
   psi_apply_vectorized = jax.vmap(psi_apply, in_axes=(None, 0))     #vmap psi  
 
