@@ -31,6 +31,31 @@ def extract_V_F_params(param_dict):
 	F_array = jnp.concatenate((bF, wF))
 	V_array = jnp.concatenate((bV, wV))
 	return F_array, V_array
+
+def extract_V_F_params(param_dict):
+	keys = list(param_dict.keys())
+	if len(keys) == 1:
+		key = keys[0]
+		if key == 'rbm':
+			bF = param_dict[key]['bF']
+			wF = param_dict[key]['wF']
+			bV = param_dict[key]['bV']
+			wV = param_dict[key]['wV']
+		else:
+			raise ValueError("Dictionary with len(keys)==1 is not 'rbm'.")
+	elif len(keys) == 2:
+		if keys[0] == 'rbm_cnn/~/F' and keys[1] == 'rbm_cnn/~/V':
+			bF = param_dict[keys[0]]['b']
+			wF = param_dict[keys[0]]['w']
+			wF = einops.rearrange(wF, ' a b c d -> (a b c d)')
+			bV = param_dict[keys[1]]['b']
+			wV = param_dict[keys[1]]['w']
+			wV = einops.rearrange(wV, ' a b c d -> (a b c d)')
+	else:
+		raise ValueError("Dictionary has more than two keys")
+	F_array = jnp.concatenate((bF, wF))
+	V_array = jnp.concatenate((bV, wV))
+	return F_array, V_array	
 	# return jax.device_get(F_array), jax.device_get(V_array)
 
 def similarity_fn(w1, w2):
