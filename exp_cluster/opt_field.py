@@ -139,16 +139,16 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
     params = tc_utils.generate_uniform_noise_param(noise_key, my_params, epsilon)
     # params = tc_utils.set_partial_params_const(params, ['wV', 'bV'], 0., model_name=model_name)
 
-  if model_name == 'rbm_noise':
-    print(f"Initial parameters are")
-    fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
-    plot_utils.plot_weights_noise(axs, params, h_field_array[0], 'rbm_noise')
-    plt.show()
-  elif model_name == 'rbm':
-    print(f"Initial parameters are")
-    fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
-    plot_utils.plot_weights(axs, params, h_field_array[0], 'rbm', )
-    plt.show()
+  # if model_name == 'rbm_noise':
+  #   print(f"Initial parameters are")
+  #   fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
+  #   plot_utils.plot_weights_noise(axs, params, h_field_array[0], 'rbm_noise')
+  #   plt.show()
+  # elif model_name == 'rbm':
+  #   print(f"Initial parameters are")
+  #   fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
+  #   plot_utils.plot_weights(axs, params, h_field_array[0], 'rbm', )
+  #   plt.show()
   new_params = params
   new_configs = init_configs
   new_psis = psi_apply_vectorized(new_params, new_configs)
