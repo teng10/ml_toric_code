@@ -167,5 +167,5 @@ class RBM_CNN_2(hk.Module):
 
     return output
 
-def fwd_cnn_2(x, spin_shape, out_channel):
+def fwd_cnn_2(x, spin_shape):
   return RBM_CNN_2(spin_shape, out_channel=2, kernels=(3,2))(x)  
