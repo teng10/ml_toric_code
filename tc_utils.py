@@ -59,7 +59,7 @@ def get_cnn_channel_params(sector, channel):
   bV = np.concatenate([bzero, bzero], -1)
   wV = np.concatenate([wzero, wzero], -1)
 
-  return {'rbm_cnn/~/F':dict(b=bF, w=wF), 'rbm_cnn/~/V':dict(b=bV, w=wV)}      
+  return {'rbm_cnn_2/~/F':dict(b=bF, w=wF), 'rbm_cnn_2/~/V':dict(b=bV, w=wV)}      
 
 def get_params_zeeman():
   b = np.array([np.pi / 4.])
