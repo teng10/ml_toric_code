@@ -191,7 +191,7 @@ def main(argv):
   results = _optimize_over_fields(h_field_array=h_field_array, epsilon=epsilon,
                                                                                                           spin_shape=spin_shape, num_chains=5, num_steps=5,
                                                             first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.001, spin_flip_p=.4, main_key=main_key,
-                                                            angle=angle, model_name=model_name, sector=sector, channel=2)
+                                                            angle=angle, model_name=model_name, sector=sector)
   #   params_list_list.append(params_list)
   #   energies_list.append(energy)
   #   energy_steps_list.append(energy_steps)
