@@ -44,6 +44,23 @@ def get_cnn_params(sector):
 
   return {'rbm_cnn/~/F':dict(b=bF, w=wF), 'rbm_cnn/~/V':dict(b=np.array([0.]), w=np.zeros((3, 2, 1, 1)))}    
 
+def get_cnn_channel_params(sector, channel):
+  weight_list = [np.pi / 4. * np.array([[1., 0.], [1., 1.], [1., 0.]]), 
+              np.pi / 4. *  np.array([[1., 0.], [-1., 1.], [1., 0.]]), 
+              np.pi / 4. *  np.array([[-1., 0.], [1., 1.], [1., 0.]]), 
+              np.pi / 4. *  np.array([[-1., 0.], [-1., 1.], [1., 0.]])]
+  bias_list = np.array([0., np.pi / 2., np.pi / 2., 0., 0.])
+  wF = np.expand_dims(np.expand_dims(weight_list[sector-1], -1), -1)
+  wzero = np.zeros_like(wF)
+  bF = np.array([bias_list[sector-1]])
+  bzero = np.zeros_like(bF)
+  bF = np.concatenate([bF, bzero], -1)
+  wF = np.concatenate([wF, wzero], -1)
+  bV = np.concatenate([bzero, bzero], -1)
+  wV = np.concatenate([wzero, wzero], -1)
+
+  return {'rbm_cnn/~/F':dict(b=bF, w=wF), 'rbm_cnn/~/V':dict(b=bV, w=wV)}      
+
 def get_params_zeeman():
   b = np.array([np.pi / 4.])
   w = np.array([np.pi / 4., 0., 0., 0.])

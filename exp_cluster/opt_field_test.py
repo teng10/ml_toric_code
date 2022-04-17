@@ -132,23 +132,14 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
       my_params = tc_utils.convert_rbm_expanded(rbm_params, (spin_shape[0]//2, spin_shape[1]))
     elif model_name == 'rbm_cnn':
       my_params = tc_utils.get_cnn_params(sector)
+    elif model_name == 'rbm_cnn_2':
+      my_params = tc_utils.get_cnn_channel_params(sector, channel=2)      
     else:
       # todo: this line needs to be modified
       _, noise_key_2 = jax.random.split(noise_key, 2)
       my_params = model.init(noise_key_2, spin_shape=spin_shape, x=init_configs[0,...])
     params = tc_utils.generate_uniform_noise_param(noise_key, my_params, epsilon)
-    # params = tc_utils.set_partial_params_const(params, ['wV', 'bV'], 0., model_name=model_name)
 
-  # if model_name == 'rbm_noise':
-  #   print(f"Initial parameters are")
-  #   fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
-  #   plot_utils.plot_weights_noise(axs, params, h_field_array[0], 'rbm_noise')
-  #   plt.show()
-  # elif model_name == 'rbm':
-  #   print(f"Initial parameters are")
-  #   fig, axs = plt.subplots(1, 2, figsize=(8 * 5, 4 ))
-  #   plot_utils.plot_weights(axs, params, h_field_array[0], 'rbm', )
-  #   plt.show()
   new_params = params
   new_configs = init_configs
   new_psis = psi_apply_vectorized(new_params, new_configs)
@@ -181,7 +172,7 @@ def main(argv):
   file_path = argv[3]
   iterations = 3
   epsilon = 0.2
-  model_name = 'rbm'
+  model_name = 'rbm_cnn_2'
 
 
   spin_shape = (6,3)
@@ -200,7 +191,7 @@ def main(argv):
   results = _optimize_over_fields(h_field_array=h_field_array, epsilon=epsilon,
                                                                                                           spin_shape=spin_shape, num_chains=5, num_steps=5,
                                                             first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.001, spin_flip_p=.4, main_key=main_key,
-                                                            angle=angle, model_name=model_name, sector=sector)
+                                                            angle=angle, model_name=model_name, sector=sector, channel=2)
   #   params_list_list.append(params_list)
   #   energies_list.append(energy)
   #   energy_steps_list.append(energy_steps)
