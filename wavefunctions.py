@@ -122,10 +122,10 @@ def fwd_noise(x, spin_shape):
 #@title Neural Network Model
 class RBM_CNN_2(hk.Module):
 
-  def __init__(self, spin_shape, kernels, name=None):
+  def __init__(self, spin_shape, out_channel, kernels, name=None):
     super().__init__(name=None)
     self.spin_shape = spin_shape
-    output_channel = 5
+    self.output_channel = out_channel
 
     # Add mask to make sure CNN only takes values from nearest neighbour
     mask_F = np.array([[1,0],[1,1],[1,0]])
@@ -137,9 +137,9 @@ class RBM_CNN_2(hk.Module):
     # #Build CNN layer for vertex operators
     # self.conv_V = hk.Conv2D(output_channel, kernels, name="V",stride=(2,1), padding="VALID", mask=mask_V) 
 
-    self.conv_F = hk.Conv2D(output_channel, kernels, name="F",stride=(2,1), padding="VALID")
+    self.conv_F = hk.Conv2D(self.output_channel, kernels, name="F",stride=(2,1), padding="VALID")
     #Build CNN layer for vertex operators
-    self.conv_V = hk.Conv2D(output_channel, kernels, name="V",stride=(2,1), padding="VALID")     
+    self.conv_V = hk.Conv2D(self.output_channel, kernels, name="V",stride=(2,1), padding="VALID")     
   
   def __call__(self, x):
     # len_x = x.shape[0]
@@ -167,5 +167,5 @@ class RBM_CNN_2(hk.Module):
 
     return output
 
-def fwd_cnn_2(x, spin_shape):
-  return RBM_CNN_2(spin_shape, kernels=(3,2))(x)  
+def fwd_cnn_2(x, spin_shape, out_channel):
+  return RBM_CNN_2(spin_shape, out_channel, kernels=(3,2))(x)  
