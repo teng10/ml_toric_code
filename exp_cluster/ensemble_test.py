@@ -55,7 +55,7 @@ def main(argv):
   spin_shape=(6, 3)
   num_spins = spin_shape[0] * spin_shape[1]
   angle = 0.
-  rng_seq = hk.PRNGSequence(42 + sector * int(argv[3]))
+  rng_seq = hk.PRNGSequence(42 + int(argv[3]))
   noise_amp = 0.2
   p_mparticle = 0.3
   model = hk.without_apply_rng(hk.transform(wavefunctions.fwd_noise))
