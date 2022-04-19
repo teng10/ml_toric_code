@@ -48,6 +48,39 @@ import estimates_mcmc
 import mcmc_param
 import exact_comp
 
+def generate_samples_T(key, h_field, spin_shape, 
+                       len_chain_E, burn_E_factor, num_samples_E, 
+                       psi_apply, 
+                       len_chain, burn_factor, num_samples, 
+                       T, noise_amp, 
+                       p_flip,
+                       params, 
+                       angle, 
+                       return_results=False, 
+                       init_noise=0.):
+  num_spins = spin_shape[0] * spin_shape[1]
+  # Parameter for estimating energy
+  len_chain_burn_E = burn_E_factor * num_spins
+  # Parameters for mcmc_param
+  len_chain_burn= burn_factor
+  ham = tc_utils.set_up_ham_field_rotated(spin_shape, h_field, angle)
+  estimate_ET_fn = functools.partial(estimates_mcmc.estimate_operator, operator=ham, psi_apply=psi_apply, 
+                                    len_chain=len_chain_E, len_chain_first_burn=len_chain_burn_E, spin_shape=spin_shape, 
+                                    num_samples=num_samples_E)
+  key_sample, key_init, key_flip = jax.random.split(key, 3)
+  rbm_noise_params_batch = generate_field_noise_batch(key_init, params,
+                                                      init_noise, num_samples, spin_shape)
+  # propose_move_param_fn = functools.partial(tc_utils.generate_FV_noise_param, amp_noise=noise_amp)
+  propose_move_param_fn = functools.partial(tc_utils.propose_param_fn, p_mpar=p_flip, amp_noise=noise_amp)
+  accept_rate, new_samples_dict, new_energies = mcmc_param.energy_sampling_mcmc(key_sample, rbm_noise_params_batch, 
+                                                                  len_chain_burn, len_chain, estimate_ET_fn, 
+                                                                  propose_move_param_fn, T, 
+                                                                   return_results=return_results)
+
+  new_samples = jax.tree_map(lambda x: einops.rearrange(x, ' a b c d e -> (a b) c d e'), new_samples_dict )
+  new_energies = einops.rearrange(new_energies, ' a b -> (a b)') / num_spins
+  return accept_rate, new_samples, new_energies    
+
 def main(argv):
   print(f'Program has started with args: {argv}')
   h_field = float(argv[1])
@@ -72,7 +105,7 @@ def main(argv):
   file_path = argv[4]
   # jit function
   generate_samples_T_fn = functools.partial(
-      notebook_fn.generate_samples_T, spin_shape=spin_shape, psi_apply=psi_apply,
+      generate_samples_T, spin_shape=spin_shape, psi_apply=psi_apply,
       len_chain_E=len_chain_E, burn_E_factor=burn_E_factor, num_samples_E=num_samples_E, 
       len_chain=len_chain, burn_factor=burn_factor, num_samples=num_samples, 
       noise_amp=noise_amp, p_flip=p_mparticle)
