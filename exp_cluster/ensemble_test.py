@@ -109,12 +109,12 @@ def main(argv):
   psi_apply = functools.partial(model.apply, spin_shape=spin_shape)
   # Parameters for mcmc energy
   len_chain_E=30
-  burn_E_factor = 5
-  num_samples_E = 2
+  burn_E_factor = 500
+  num_samples_E = 200
   # Parameters for mcmc_param
-  len_chain= 3
+  len_chain= 300
   burn_factor= None
-  num_samples=2
+  num_samples=5
   # sector_labels = np.concatenate(([np.full((num_samples * len_chain,), i) for i in sector_list]))     # Create labels for each batch of samples 
   file_path = argv[4]
   # jit function
