@@ -114,7 +114,7 @@ def main(argv):
   new_samples_list = []
   new_energies_list = []
   accept_rate_list = []
-  screened_params_dict = pickle.load(open(file_path+"params_screened_temp.p", "rb"))
+  screened_params_dict = pickle.load(open(file_path+"../../"+"params_screened_temp.p", "rb"))
   params_list = utils.split_axis(screened_params_dict[h_field], 0)
   for params in tqdm(params_list, desc="param sector"):
     accept_rate, new_samples, new_energies = generate_samples_T_jit(key=next(rng_seq), h_field=h_field, T=T, params=params, angle=angle)      
