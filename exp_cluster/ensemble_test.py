@@ -48,6 +48,20 @@ import estimates_mcmc
 import mcmc_param
 import exact_comp
 
+##### to-do change this!
+def generate_field_noise_batch(key, 
+                               params, 
+                               noise_amp, 
+                               batch, shape, 
+                               return_noise=False):
+  # rbm_exp_params = tc_utils.convert_rbm_expanded(params, (shape[0]//2, shape[1]))
+  rngs = utils.split_key(key, (batch, 2))
+  rbm_noise_params_batch = [tc_utils.generate_uniform_noise_param(rngs[i], params,  
+                                                                  noise_amp, return_noise) for i in range(batch)]
+  if return_noise:
+    return list(map(list, zip(*rbm_noise_params_batch)))                                                                  
+  return rbm_noise_params_batch
+  
 def generate_samples_T(key, h_field, spin_shape, 
                        len_chain_E, burn_E_factor, num_samples_E, 
                        psi_apply, 
