@@ -51,6 +51,13 @@ def extract_V_F_params(param_dict):
 			bV = param_dict[keys[1]]['b']
 			wV = param_dict[keys[1]]['w']
 			wV = einops.rearrange(wV, ' a b c d -> (a b c d)')
+		elif keys[0] == 'rbm_cnn_2/~/F' and keys[1] == 'rbm_cnn_2/~/V':
+			bF = param_dict[keys[0]]['b']
+			wF = param_dict[keys[0]]['w']
+			wF = einops.rearrange(wF, ' a b c d -> (a b c d)')
+			bV = param_dict[keys[1]]['b']
+			wV = param_dict[keys[1]]['w']
+			wV = einops.rearrange(wV, ' a b c d -> (a b c d)')			
 	else:
 		raise ValueError("Dictionary has more than two keys")
 	F_array = jnp.concatenate((bF, wF))
