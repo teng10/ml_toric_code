@@ -61,7 +61,7 @@ def generate_field_noise_batch(key,
   if return_noise:
     return list(map(list, zip(*rbm_noise_params_batch)))                                                                  
   return rbm_noise_params_batch
-  
+
 def generate_samples_T(key, h_field, spin_shape, 
                        len_chain_E, burn_E_factor, num_samples_E, 
                        psi_apply, 
@@ -147,9 +147,9 @@ def main(argv):
   mo = pattern.search(str(now))
   date = mo.group()[1:]
 
-  pickle.dump(samples_all_secs, open(file_path+"/ensemble/"+file_name_samples, 'wb'))
-  pickle.dump(energies_all_secs, open(file_path+"/ensemble/"+file_name_energies, 'wb'))
-  pickle.dump(accepts_all_secs, open(file_path+"/ensemble/"+file_name_accept_rate, 'wb'))
+  pickle.dump(samples_all_secs, open(file_path+file_name_samples, 'wb'))
+  pickle.dump(energies_all_secs, open(file_path+file_name_energies, 'wb'))
+  pickle.dump(accepts_all_secs, open(file_path+file_name_accept_rate, 'wb'))
 
 if __name__ == '__main__':
   app.run(main)
