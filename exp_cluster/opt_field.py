@@ -27,7 +27,7 @@ import einops
 #import os.path
 import math
 from absl import app
-
+import json
 import sys
 
 # setting path
@@ -133,7 +133,7 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
     elif model_name == 'rbm_cnn':
       my_params = tc_utils.get_cnn_params(sector)
     elif model_name == 'rbm_cnn_2':
-      my_params = tc_utils.get_cnn_channel_params(sector, channel=2)      
+      my_params = tc_utils.get_cnn_channel_params(sector, channel=2)
     else:
       # todo: this line needs to be modified
       _, noise_key_2 = jax.random.split(noise_key, 2)
@@ -170,14 +170,17 @@ def main(argv):
   h_field_array=np.round(np.arange(0, 1.1, h_step), 2)
   angle = 0.
   file_path = argv[3]
-  iterations = 3
+  slurm_param = json.loads(argv[4])
   epsilon = 0.2
-  model_name = 'rbm_cnn_2'
-
+  model_name = slurm_param["model_name"]
+  num_chains = slurm_param["num_chains"]
+  num_steps = slurm_param["num_steps"]
+  learning_rate = slurm_param["learning_rate"]
+  spin_flip_p = slurm_param["spin_flip_p"]
+  burn_in_factor = slurm_param["burn_in_factor"]
 
   spin_shape = (6,3)
   num_spins = spin_shape[0] * spin_shape[1]
-  burn_in_factor = 600
   sector = int(argv[1])
   rng_seq = hk.PRNGSequence(42 + sector * int(argv[2]))
   params_list_list = []
@@ -189,8 +192,8 @@ def main(argv):
   main_key = next(rng_seq)
   #params_list, energy, psis, energy_steps, psis_list, num_accepts_list, grad_list, init_param
   results = _optimize_over_fields(h_field_array=h_field_array, epsilon=epsilon,
-                                                                                                          spin_shape=spin_shape, num_chains=500, num_steps=500,
-                                                            first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=0.003, spin_flip_p=.6, main_key=main_key,
+                                                                                                         spin_shape=spin_shape, num_chains=num_chains, num_steps=num_steps,
+                                                            first_burn_len=num_spins*burn_in_factor, len_chain=30, learning_rate=learning_rate, spin_flip_p=spin_flip_p, main_key=main_key,
                                                             angle=angle, model_name=model_name, sector=sector)
 
   now = datetime.datetime.now()
