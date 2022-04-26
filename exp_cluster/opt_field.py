@@ -162,7 +162,7 @@ def _optimize_over_fields(h_field_array, epsilon, spin_shape, num_chains, num_st
     exact_energy_list.append(exact_energy / num_spins)
 
     print(f"Current energy at h={h_field} is {energy_steps[-1] / num_spins}")
-  return new_params_list, energy_density_list, exact_energy_list, energy_steps_list, num_accepts_list, psis_list, grad_list, params
+  return new_params_list, energy_density_list, exact_energy_list, energy_steps_list, num_accepts_list, psis_list, grad_list
 
 def main(argv):
   print(f'Program has started with args: {argv}')

@@ -36,7 +36,7 @@ def extract_V_F_params(param_dict):
 	keys = list(param_dict.keys())
 	if len(keys) == 1:
 		key = keys[0]
-		if key == 'rbm':
+		if key == 'rbm' or key == 'rbm_noise':
 			bF = param_dict[key]['bF']
 			wF = param_dict[key]['wF']
 			bV = param_dict[key]['bV']

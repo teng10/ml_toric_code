@@ -62,8 +62,6 @@ class PauliBond(FixedOperators):
   def get_terms(self, config):
     "Return a list of new configurations and the matrix elements between them"
     
-    # config_x = sample_utils.vertex_bond_sample(config, self.bond)
-    # config_y = sample_utils.vertex_bond_sample(config, self.bond)
     config_z = sample_utils.face_bond_sample(config, self.bond)
 
     # mat_ele_x = self.hx
@@ -73,7 +71,7 @@ class PauliBond(FixedOperators):
 
 class PauliBondX(FixedOperators):
   '''
-  Matrix elements and connected configurations for magnetic field in the Toric Code model. 
+  Matrix elements and connected configurations for magnetic field. 
   '''
   def __init__(self, hx, bond):
     self.hx = hx
@@ -84,6 +82,20 @@ class PauliBondX(FixedOperators):
     config_x = sample_utils.vertex_bond_sample(config, self.bond)
     mat_ele_x = self.hx
     return (config_x, ) , (mat_ele_x, )
+
+class PauliBondZ(FixedOperators):
+  '''
+  Matrix elements and connected configurations for magnetic field. 
+  '''
+  def __init__(self, hz, bond):
+    self.hz = hz
+    self.bond = bond
+  
+  def get_terms(self, config):
+    "Return a list of new configurations and the matrix elements between them"
+    config = sample_utils.face_bond_sample(config, self.bond)
+    mat_ele = self.hz
+    return (config, ) , (mat_ele, )    
 
 class WilsonLXBond(FixedOperators):
 

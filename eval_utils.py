@@ -3,6 +3,7 @@ import jax
 import functools
 import jax.numpy as jnp
 from jax import grad
+import numpy as np
 
 def op_local_fn(config, psi_config, op, psi, model_params):
   """
@@ -19,4 +20,4 @@ def op_expectation_fn(batched_configs, batched_psi, psi, model_params, op):
   compute_op_fn_vec = jax.vmap(compute_op_fn, in_axes=(0, 0))
 
   op_local_batch = compute_op_fn_vec(batched_configs, batched_psi)  
-  return jnp.mean(op_local_batch), jnp.std(op_local_batch, axis=0), op_local_batch
+  return jnp.mean(op_local_batch), jnp.std(op_local_batch, axis=0) / np.sqrt(op_local_batch.shape[0]), op_local_batch

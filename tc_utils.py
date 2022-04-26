@@ -9,6 +9,10 @@ import sample_utils
 import einops
 import utils
 import itertools
+import collections
+import os
+import pickle
+import re
 
 def get_bias(sector):
   bias_list = [0., np.pi / 2., np.pi / 2., 0.]
@@ -280,5 +284,85 @@ def set_partial_params_const(pytree, names_list, c, model_name='rbm_noise'):
     mutable_pytree[model_name][name] = jnp.zeros_like(pytree[model_name][name])
 
   return dict(mutable_pytree)
-  # return hk.data_structures.to_haiku_dict(mutable_pytree)
+
+# def load_opt_data(sector_list, iteration_list, spin_shape, param_only=False):
+#   my_dates = []
+#   results_sec_dict = {}
+#   for sector in sector_list:
+#     data_iter_list = []
+#     for i in iteration_list:
+#       for filename in os.listdir(file_path):
+#         # print(filename)
+#         if re.search(f"_{sector}_{i}", filename):
+#           print(filename)
+#           match = re.findall("\d+-\d+", filename)
+#           my_dates.append(match[0])
+#           my_data = pickle.load(open(file_path + filename, "rb"))
+#           if param_only: 
+#             data_iter_list.append(my_data[0])
+#           else:
+#             data_iter_list.append(my_data)
+#     results_sec_dict[sector] = data_iter_list
+#   return results_sec_dict
+
+def load_opt_data(sector_list, iteration_list, spin_shape, param_only=False):
+  my_dates = []
+  results_sec_dict = {}
+  for sector in sector_list:
+    data_iter_list = []
+    for i in iteration_list:
+      for filename in os.listdir(file_path):
+        # print(filename)
+        if re.search(f"_{sector}_{i}", filename):
+          print(filename)
+          match = re.findall("\d+-\d+", filename)
+          my_dates.append(match[0])
+          my_data = pickle.load(open(file_path + filename, "rb"))
+          if param_only: 
+            data_iter_list.append(my_data[0])
+          else:
+            data_iter_list.append(my_data)
+    results_sec_dict[sector] = data_iter_list
+  return results_sec_dict
+
+def load_opt_data_tuple_dicts(sector_list, iteration_list, file_path, DataKey):
+  # DataKey = collections.namedtuple('DataKey', ['sector', 'h_field', 'iteration'])
+  data_list = []
+  for sector in sector_list:
+    for i in iteration_list:
+      full_dict_iter = {}
+      for filename in os.listdir(file_path):
+        # print(filename)
+        if re.search(f"_{sector}_{i}", filename):
+          print(filename)
+          match = re.findall("\d+-\d+", filename)
+          my_data = pickle.load(open(file_path + filename, "rb"))
+          my_data = my_data[:-1]
+          num_data_type = len(my_data)
+          temp_list = [[] for i in range(num_data_type)]
+          for k, data in enumerate(my_data):
+            data_dict = {}
+            h_field_keys = data.keys()
+            for h_field in h_field_keys:
+              dk = DataKey(sector, h_field, i)
+              data_dict[dk] = data[h_field]
+              temp_list[k].append(data_dict)
+          data_list.append(temp_list)
+  temp_list = [[] for i in range(num_data_type)]
+  for data in data_list:
+    for i, i_data in enumerate(data):
+      temp_list[i] += i_data
+  full_data_tuple = ()
+  for l in temp_list:      
+    my_dict_l = {k:v for x in l for k,v in x.items()}
+    full_data_tuple += (my_dict_l, )
+  return full_data_tuple
+
+
+def flatten_twoLayer_dict(my_dict):
+  new_dict = {}
+  for key1, item1 in my_dict.items():
+    for key2, item2 in item1.items():
+      new_dict[(key1, key2)] = item2
+  return new_dict
  
