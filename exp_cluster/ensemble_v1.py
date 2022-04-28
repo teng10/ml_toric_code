@@ -121,11 +121,13 @@ def generate_samples_T(key, h_field, spin_shape,
 
 def main(argv):
   config = FLAGS.config
+  print(config)
   print(f'Program has started with args: {argv}')
   h_field, T = config.h_and_t[FLAGS.job_id]
   job_id = FLAGS.job_id
   rng_seq = hk.PRNGSequence(42 + int(float(job_id)))
   file_path = FLAGS.output_path
+  print(f"file path in main is {file_path}")
   iteration = config.iter
   spin_shape=(6, 3)
   num_spins = spin_shape[0] * spin_shape[1]

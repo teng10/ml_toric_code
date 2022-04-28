@@ -49,7 +49,8 @@ def _get_op_dict(directions, loop_indices, spin_shape, h, angle):
   op_dict = {}
   ham = tc_utils.set_up_ham_field_rotated(spin_shape, h, angle) # Build hamiltonian operator
   op_dict['ham'] = ham
-  pauliZ = operators.PauliBondZ(hz=1., bond=np.arange(num_spins))
+  # pauliZ = operators.PauliBondZ(hz=1., bond=np.arange(num_spins))
+  pauliZ =  operators.ToricCodeHamiltonianRotated(Jv=0., Jf=0., h=1., hx=0., face_bonds=[], vertex_bonds=[], pauli_bonds=np.arange(0, num_spins, 1))  
   op_dict['pauliZ'] = pauliZ
   for dir in directions:  # Build sets of wilson loop operators
     for idx in loop_indices:
