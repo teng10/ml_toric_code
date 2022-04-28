@@ -93,7 +93,7 @@ def main(argv):
   (h, T, iteration) = config.h_t_iter[config.file_id]
   filename_load = config.filenames_load[config.file_id]
   filename_save = config.filenames_save[config.file_id]
-  output_dir = config.output_dir
+  output_dir = os.path.join(data_dir, "estimates/")
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
   job_id = config.job_id
