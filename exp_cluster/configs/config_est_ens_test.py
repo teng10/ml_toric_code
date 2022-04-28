@@ -26,7 +26,7 @@ def get_config():
   config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/5978142/ensemble/7231166/"
   # config.output_dir = os.path.join(config.data_dir, "estimates/")
   config.filenames_load = [f"samples_(6, 3)_hz{h}_T{T}_iter{i}.p" for (h, T, i) in config.h_t_iter]
-  config.filenames_save = [f"estimates_(6, 3)_hz{h}_T{T}_iter{i}.nc" for (h, T, i) in config.h_t_iter]
+  config.filenames_save = [f"estimates_(6, 3)_hz{h}_T{T}_iter{i}_id{config.job_id}.nc" for (h, T, i) in config.h_t_iter]
   
   return config
 
