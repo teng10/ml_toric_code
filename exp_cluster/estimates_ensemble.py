@@ -89,14 +89,14 @@ def main(argv):
   burn_E_factor = config.burn_E_factor
   num_samples_E = config.num_samples_E
   data_dir = config.data_dir
-  # (h, T) = config.h_and_t
-  (h, T, iteration) = config.h_t_iter[config.file_id]
-  filename_load = config.filenames_load[config.file_id]
-  filename_save = config.filenames_save[config.file_id]
   output_dir = os.path.join(data_dir, "estimates/")
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
   job_id = config.job_id
+  (h, T, iteration) = config.h_t_iter[config.file_id]
+  filename_load = config.filenames_load[config.file_id]
+  filename_save = config.filenames_save[config.file_id] + f"_id_{config.job_id}.nc"
+
   
   params_loaded = pickle.load(open(data_dir + filename_load, "rb"))
   data_size = jax.tree_leaves(utils.shape_structure(params_loaded))[0]
@@ -110,7 +110,6 @@ def main(argv):
   loop_indices = range(spin_shape[1])
   
   results_desc = ["ev_", "std_", "local_", "accept"]
-  op_dict_desc = "WL_H_S"
   
   idx_data = []
   for idx in data_indices:
