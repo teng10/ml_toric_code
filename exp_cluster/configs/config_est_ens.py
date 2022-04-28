@@ -9,7 +9,6 @@ def get_config():
   config.num_workers = config_dict.placeholder(int)
   config.job_id = config_dict.placeholder(int)
   config.file_id = config_dict.placeholder(int)
-  #
 
   config.iter_list = [2]
   config.field2 = 'tom'

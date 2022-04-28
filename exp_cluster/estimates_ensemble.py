@@ -25,6 +25,7 @@ from absl import app
 import collections
 
 import sys
+import os
 
 # setting path
 sys.path.append('..')
@@ -93,6 +94,8 @@ def main(argv):
   filename_load = config.filenames_load[config.file_id]
   filename_save = config.filenames_save[config.file_id]
   output_dir = config.output_dir
+  if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
   job_id = config.job_id
   
   params_loaded = pickle.load(open(data_dir + filename_load, "rb"))
