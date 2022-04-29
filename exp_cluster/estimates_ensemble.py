@@ -139,6 +139,7 @@ def main(argv):
   #   data_vars['local_'+k] = (['h', 'T', 'iter', 'ensemble_id', 'batch'], val)   
   my_dataset = xr.Dataset(data_vars=data_vars, coords=dict(h=[h], T=[T], iter=[iteration], ensemble_id=data_indices))
   my_dataset.to_netcdf(path=output_dir+filename_save)
+  return config
 
 if __name__ == '__main__':
   app.run(main)

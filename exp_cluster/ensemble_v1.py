@@ -182,6 +182,7 @@ def main(argv):
 
   pickle.dump(samples_all_secs, open(file_path+file_name_samples, 'wb'))
   my_dataset.to_netcdf(path=file_path+file_name_energies_accept)
+  return config
 
 if __name__ == '__main__':
   app.run(main)
