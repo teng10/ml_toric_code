@@ -22,7 +22,7 @@ def get_config():
   # h_and_t = list(itertools.product(h_params, t_params))
   config.h_t_iter = list(itertools.product(h_params, t_params, config.iter_list))
 
-  config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/5978142/ensemble/7592828/"
+  config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/5978142/ensemble/7231166/"
   # config.output_dir = os.path.join(config.data_dir, "estimates/")
   config.filenames_load = [f"samples_(6, 3)_hz{h}_T{T}_iter{i}.p" for (h, T, i) in config.h_t_iter]
   config.filenames_save = [f"WL_H_S_(6, 3)_hz{h}_T{T}_iter{i}" for (h, T, i) in config.h_t_iter]
