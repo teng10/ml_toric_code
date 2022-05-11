@@ -19,20 +19,20 @@ def _get_similarity_matrix(similarity_fn, params_stacked):
   similarity_vec = jax.vmap(jax.vmap(similarity_fn, (0, None)), (None, 0))
   return similarity_vec(params_stacked, params_stacked)
   
-def extract_V_F_params(param_dict):
-	keys = list(param_dict.keys())
-	if len(keys) > 1:
-		raise ValueError("Dictionary has more than one key")
-	key = keys[0]
-	bF = param_dict[key]['bF']
-	wF = param_dict[key]['wF']
-	bV = param_dict[key]['bV']
-	wV = param_dict[key]['wV']
-	F_array = jnp.concatenate((bF, wF))
-	V_array = jnp.concatenate((bV, wV))
-	return F_array, V_array
+# def extract_V_F_params(param_dict):
+# 	keys = list(param_dict.keys())
+# 	if len(keys) > 1:
+# 		raise ValueError("Dictionary has more than one key")
+# 	key = keys[0]
+# 	bF = param_dict[key]['bF']
+# 	wF = param_dict[key]['wF']
+# 	bV = param_dict[key]['bV']
+# 	wV = param_dict[key]['wV']
+# 	F_array = jnp.concatenate((bF, wF))
+# 	V_array = jnp.concatenate((bV, wV))
+# 	return F_array, V_array
 
-def extract_V_F_params(param_dict):
+def extract_V_F_params(param_dict, np_only=False):
 	keys = list(param_dict.keys())
 	if len(keys) == 1:
 		key = keys[0]
@@ -60,8 +60,12 @@ def extract_V_F_params(param_dict):
 			wV = einops.rearrange(wV, ' a b c d -> (a b c d)')			
 	else:
 		raise ValueError("Dictionary has more than two keys")
-	F_array = jnp.concatenate((bF, wF))
-	V_array = jnp.concatenate((bV, wV))
+	if np_only: 
+		F_array = np.concatenate((bF, wF))
+		V_array = np.concatenate((bV, wV))
+	else:
+		F_array = jnp.concatenate((bF, wF))
+		V_array = jnp.concatenate((bV, wV))
 	return F_array, V_array	
 	# return jax.device_get(F_array), jax.device_get(V_array)
 
@@ -79,6 +83,24 @@ def similarity_fn(w1, w2):
 		return jnp.mean(w_cos_max)
 	F_array_1, V_array_1 = extract_V_F_params(w1)
 	F_array_2, V_array_2 = extract_V_F_params(w2)
+	F_max = _S_max(F_array_1, F_array_2)
+	V_max = _S_max(V_array_1, V_array_2)
+	return (1. + (F_max + V_max) / 2.) /2. 
+
+def similarity_fn_np(w1, w2):
+	"""
+	Takes param dictionaries w1, w2, return similarity
+	"""
+	# print(type(w1))
+	def _S_max(array1, array2):
+		w_difference_cos = np.array([np.cos(2. * (array1 - array2)), np.cos(2. * (-array1 - array2))])
+		# print(w_difference_cos.shape)
+		w_cos_mean = np.mean(w_difference_cos, axis=1)
+		w_cos_max = np.max(w_cos_mean, axis=0)
+		# print(w_cos_max.shape)
+		return np.mean(w_cos_max)
+	F_array_1, V_array_1 = extract_V_F_params(w1, True)
+	F_array_2, V_array_2 = extract_V_F_params(w2, True)
 	F_max = _S_max(F_array_1, F_array_2)
 	V_max = _S_max(V_array_1, V_array_2)
 	return (1. + (F_max + V_max) / 2.) /2. 

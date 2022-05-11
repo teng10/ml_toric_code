@@ -168,12 +168,12 @@ def main(argv):
   file_name_samples = f"samples_{spin_shape}_hz{h_field}_T{T}_iter{iteration}.p"
   file_name_energies_accept = f"energies_accept_{spin_shape}_hz{h_field}_T{T}_iter{iteration}.nc"
   samples_all_secs = utils.concat_along_axis(new_samples_list, axis=0)
-  energies_all_secs = jnp.concatenate(new_energies_list)
-  accepts_all_secs = jnp.concatenate(accept_rate_list)    
+  energies_all_secs = np.concatenate(new_energies_list)[np.newaxis, np.newaxis, np.newaxis, ...] # numpy should work here because only generate_smaples is jitted
+  accepts_all_secs = np.concatenate(accept_rate_list)[np.newaxis, np.newaxis, np.newaxis, ...]    
   data_vars = {}
-  data_vars['energy'] = (["samples"], energies_all_secs)
-  data_vars['accept'] = (["chains"], accepts_all_secs)
-  my_dataset = xr.Dataset(data_vars=data_vars, coords=dict(samples=np.arange(len_chain * num_samples * 4), chains=np.arange(num_samples * 4)))
+  data_vars['energy'] = (["h", "T", "iter", "samples"], energies_all_secs)
+  data_vars['accept'] = (["h", "T", "iter", "chains"], accepts_all_secs)
+  my_dataset = xr.Dataset(data_vars=data_vars, coords=dict(h=[h_field], T=[T], iter=[iteration], samples=np.arange(len_chain * num_samples * 4), chains=np.arange(num_samples * 4)))
 
   now = datetime.datetime.now()
   pattern = re.compile(r"-\d\d-\d\d")
