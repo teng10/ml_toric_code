@@ -52,19 +52,24 @@ config_flags.DEFINE_config_file('config')
 flags.DEFINE_integer('job_id', 0, 'slurm job id.')
 FLAGS = flags.FLAGS
 
+# def _get_similarity_matrix(similarity_fn, params_stacked):
+#   # params_list = utils.split_axis(params_stacked, axis=0)
+#   num_params = jax.tree_leaves(utils.shape_structure(params_stacked))[0]
+#   s_mat = np.zeros((num_params, num_params))
+#   for i in range(num_params):
+#     for j in range(i, num_params):
+#       param1 = utils.slice_along_axis(params_stacked, 0, i)
+#       param2 = utils.slice_along_axis(params_stacked, 0, j)
+#       sim = similarity_fn(param1, param2)
+#       s_mat[i, j] = sim
+#       s_mat[j, i] = sim
+#   return s_mat
 def _get_similarity_matrix(similarity_fn, params_stacked):
-  # params_list = utils.split_axis(params_stacked, axis=0)
-  num_params = jax.tree_leaves(utils.shape_structure(params_stacked))[0]
-  s_mat = np.zeros((num_params, num_params))
-  for i in range(num_params):
-    for j in range(i, num_params):
-      param1 = utils.slice_along_axis(params_stacked, 0, i)
-      param2 = utils.slice_along_axis(params_stacked, 0, j)
-      sim = similarity_fn(param1, param2)
-      s_mat[i, j] = sim
-      s_mat[j, i] = sim
-  return s_mat
-
+  S_vec = jax.vmap(similarity_fn, in_axes=(0, None))
+  S_vec_vec = jax.vmap(S_vec, in_axes=(None, 0))
+  S_mat = S_vec_vec(params_stacked, params_stacked)
+  return  jax.device_get(S_mat)
+  
 def main(argv): 
   config = FLAGS.config
   spin_shape=(6, 3)
@@ -86,7 +91,7 @@ def main(argv):
     ens_list.append(data)
   ens_dict = dict(zip(h_t_iter, ens_list))  
   
-  similarity_fn = functools.partial(diffusion_map.similarity_fn_np)
+  similarity_fn = functools.partial(diffusion_map.similarity_fn)
   data_sets = []
   for key, params_stacked in ens_dict.items():
     h, T, iteration = key
