@@ -23,9 +23,9 @@ import einops
 import math
 from absl import app
 import collections
-
 import sys
 import os
+import json
 
 # setting path
 sys.path.append('..')
@@ -139,7 +139,8 @@ def main(argv):
   #   data_vars['local_'+k] = (['h', 'T', 'iter', 'ensemble_id', 'batch'], val)   
   my_dataset = xr.Dataset(data_vars=data_vars, coords=dict(h=[h], T=[T], iter=[iteration], ensemble_id=data_indices))
   my_dataset.to_netcdf(path=output_dir+filename_save)
-  return config
+  with open(f'config_{job_id}.json', 'w') as f:
+    json.dump(output_dir+config.to_json(), f)
 
 if __name__ == '__main__':
   app.run(main)
