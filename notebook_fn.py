@@ -33,12 +33,13 @@ def get_date():
   mo = pattern.search(str(now))
   return mo.group()[1:]
   
-def save_file(data, file_name, file_path):
-  now = datetime.datetime.now()
-  pattern = re.compile(r"-\d\d-\d\d")
-  mo = pattern.search(str(now))
-  date = mo.group()[1:]
-  file_name = f"{date}_" + file_name
+def save_file(data, file_name, file_path, add_date=True):
+  if add_date:
+    now = datetime.datetime.now()
+    pattern = re.compile(r"-\d\d-\d\d")
+    mo = pattern.search(str(now))
+    date = mo.group()[1:]
+    file_name = f"{date}_" + file_name
   pickle.dump(data, open(file_path+file_name, 'wb'))
   files.download(file_path+file_name)
 

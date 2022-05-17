@@ -49,7 +49,7 @@ import ml_collections
 from ml_collections.config_flags import config_flags
 
 config_flags.DEFINE_config_file('config')
-flags.DEFINE_integer('job_id', 0, 'slurm job id.')
+# flags.DEFINE_integer('job_id', 0, 'slurm job id.')
 FLAGS = flags.FLAGS
 
 # def _get_similarity_matrix(similarity_fn, params_stacked):
@@ -107,7 +107,8 @@ def main(argv):
 
   my_dataset = xr.merge(data_sets)
   my_dataset.to_netcdf(path=output_dir+filename_save)
-  return config
+  with open(f'config_{job_id}.json', 'w') as f:
+    json.dump(output_dir+config.to_json(), f)
 
 if __name__ == '__main__':
   app.run(main)
