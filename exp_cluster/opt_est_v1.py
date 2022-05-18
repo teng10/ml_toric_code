@@ -73,7 +73,7 @@ def main(argv):
   h_field_array = np.array(config.h_params)
   rng_seq = hk.PRNGSequence(42 + file_id)
   data_dir = config.data_dir
-  output_dir = config.output_dir
+  output_dir = data_dir + "opt_est/"
   spin_shape = config.spin_shape
   sector_list = config.sector_list
   iteration_list = config.iter_list

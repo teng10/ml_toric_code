@@ -24,7 +24,6 @@ def get_config():
   # config.h_params = [0., 0.325]
 
   config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/10331255/"
-  config.output_dir = config.data_dir + "opt_est/"
   config.filename_ens = "params_dict.p"
   config.filename_vec = [f"vec_{i}.nc" for i in config.iter_list]
   config.filenames_ens_ppt = [f"{config.est_desc}_{config.spin_shape}_{i}.nc" for i in config.iter_list]

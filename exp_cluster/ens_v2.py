@@ -107,7 +107,7 @@ def main(argv):
   sector_list = config.sector_list
   rng_seq = hk.PRNGSequence(42 + file_id)
   data_dir = config.data_dir
-  output_dir = config.output_dir
+  output_dir = data_dir + "/ensemble/" + f"{job_id}/"
   iteration = config.iter
   spin_shape = config.spin_shape
   num_spins = spin_shape[0] * spin_shape[1]

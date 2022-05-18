@@ -30,9 +30,7 @@ def get_config():
   config.filenames_ens = [f"samples_{config.spin_shape}_hz{h}_T{T}_iter{config.iter}.p" for (h, T) in config.h_and_t]
   config.filenames_ens_property = [f"energies_accept_{config.spin_shape}_hz{h}_T{T}_iter{config.iter}.nc" for (h, T) in config.h_and_t]
 
-  config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/10331255/"
-  config.output_dir = config.data_dir + "/ensemble/"
-  
+  config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/10331255/"  
   return config
 
 
