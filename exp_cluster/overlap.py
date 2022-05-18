@@ -53,49 +53,6 @@ config_flags.DEFINE_config_file('config')
 # flags.DEFINE_integer('job_id', 0, 'slurm job id.')
 FLAGS = flags.FLAGS
 
-def get_vector(num_sites, batch_size, psi, psi_params):
-  """Generates a full wavefunction by evaluating `psi` on basis elements."""
-  # print(basis_iterator)
-  def _get_full_basis_iterator(n_sites, batch_size):
-    iterator = itertools.product([-1., 1.], repeat=n_sites)
-    return _batch_iterator(iterator, batch_size)
-
-  def _batch_iterator(iterator, batch_size=1):
-    cs = []
-    count = 0
-    for c in iterator:
-      cs.append(c)
-      count += 1
-      if count == batch_size:
-        cs_out = np.stack(cs)
-        cs = []
-        count = 0
-        yield cs_out
-    if cs:
-      yield np.stack(cs)   
-       
-  psi_fn = jax.jit(jax.vmap(functools.partial(psi, psi_params)))
-  psi_values = []
-  basis_iterator = _get_full_basis_iterator(num_sites, batch_size)
-  for cs in basis_iterator:
-    psi_values.append(jax.device_get(psi_fn(cs)))
-  return np.concatenate(psi_values)  
-
-def exact_overlap(v1, v2):
-  norm_1 = np.vdot(v1, v1)
-  norm_2 = np.vdot(v2, v2)
-  return np.abs(np.vdot(v1, v2) / np.sqrt(norm_1 * norm_2))
-
-def _get_overlap_matrix(vectors):
-  """ Given a list of array (`vectors`) or an array whose zeroth-dimension is batch dimension (representing a stacked vector)."""
-  num_vecs = len(vectors)
-  indices_list = list(itertools.combinations_with_replacement(range(num_vecs), 2))
-  overlap_mat = np.zeros((num_vecs, num_vecs))
-  for index_pair in indices_list:
-    overlap = exact_overlap(vectors[index_pair[0]], vectors[index_pair[1]])
-    overlap_mat[index_pair] = overlap
-    overlap_mat[index_pair[1], index_pair[0]] = overlap
-  return overlap_mat
 
 def main(argv): 
   #Load parameters from config file
@@ -124,10 +81,10 @@ def main(argv):
   vectors = []
   for i in range(data_size):
     param = utils.slice_along_axis(params_loaded, 0, i)
-    vec = get_vector(num_spins, batch_size, psi_apply, param)
+    vec = exact_comp.get_vector(num_spins, batch_size, psi_apply, param)
     vectors.append(vec)
   #Compute overlap matrix given `vectors`
-  overlap_mat = _get_overlap_matrix(vectors)
+  overlap_mat = exact_comp._get_overlap_matrix(vectors)
   overlap_mat = overlap_mat[np.newaxis, np.newaxis, np.newaxis, ...]
   data_vars = {}
   data_vars['overlap'] = (['h', 'T', 'iter', 'ens_idx_1', 'ens_idx_2'], overlap_mat)
@@ -136,8 +93,8 @@ def main(argv):
 
   ds.to_netcdf(path=output_dir+filename_save)
   # Save config file as json
-  with open(f'config_{job_id}.json', 'w') as f:
-    json.dump(output_dir+config.to_json(), f)
+  with open(output_dir+f'config_{job_id}.json', 'w') as f:
+    json.dump(config.to_json(), f)
 
 if __name__ == '__main__':
   app.run(main)

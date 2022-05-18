@@ -3,7 +3,6 @@ import jax.numpy as jnp
 import numpy as np
 import itertools
 import functools
-# import notebook_fn
 
 def get_vector(num_sites, batch_size, psi, psi_params):
   """Generates a full wavefunction by evaluating `psi` on basis elements."""
@@ -45,3 +44,14 @@ def exact_overlap(v1, v2):
   norm_1 = np.vdot(v1, v1)
   norm_2 = np.vdot(v2, v2)
   return np.abs(np.vdot(v1, v2) / np.sqrt(norm_1 * norm_2))  
+
+def _get_overlap_matrix(vectors):
+  """ Given a list of array (`vectors`) or an array whose zeroth-dimension is batch dimension (representing a stacked vector)."""
+  num_vecs = len(vectors)
+  indices_list = list(itertools.combinations_with_replacement(range(num_vecs), 2))
+  overlap_mat = np.zeros((num_vecs, num_vecs))
+  for index_pair in indices_list:
+    overlap = exact_overlap(vectors[index_pair[0]], vectors[index_pair[1]])
+    overlap_mat[index_pair] = overlap
+    overlap_mat[index_pair[1], index_pair[0]] = overlap
+  return overlap_mat  

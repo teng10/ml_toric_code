@@ -206,8 +206,8 @@ def main(argv):
   # h_field_list = list(h_field_array)
   field_results_dict = [dict(zip(h_field_array, data)) for data in results]
   pickle.dump(field_results_dict, open(output_dir + filename_save, 'wb'))
-  with open(f'config_{job_id}.json', 'w') as f:
-    json.dump(output_dir+config.to_json(), f)  
+  with open(output_dir+f'config_{job_id}.json', 'w') as f:
+    json.dump(config.to_json(), f)  
 
 if __name__ == '__main__':
   app.run(main)

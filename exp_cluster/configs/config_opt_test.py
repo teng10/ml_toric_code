@@ -6,7 +6,6 @@ import os
 def get_config():
   config = ml_collections.ConfigDict()
   # job properties
-  config.num_workers = config_dict.placeholder(int)
   config.job_id = config_dict.placeholder(int)
   config.file_id = config_dict.placeholder(int)
   #
