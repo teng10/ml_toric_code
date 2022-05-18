@@ -73,28 +73,28 @@ DataKey = collections.namedtuple('DataKey', ['sector', 'h_field', 'iteration'])
 
 
 ##### to-do change this!
-def generate_field_noise_batch(key, 
-                               params, 
-                               noise_amp, 
-                               batch, shape, 
+def generate_field_noise_batch(key,
+                               params,
+                               noise_amp,
+                               batch, shape,
                                return_noise=False):
   # rbm_exp_params = tc_utils.convert_rbm_expanded(params, (shape[0]//2, shape[1]))
   rngs = utils.split_key(key, (batch, 2))
-  rbm_noise_params_batch = [tc_utils.generate_uniform_noise_param(rngs[i], params,  
+  rbm_noise_params_batch = [tc_utils.generate_uniform_noise_param(rngs[i], params,
                                                                   noise_amp, return_noise) for i in range(batch)]
   if return_noise:
-    return list(map(list, zip(*rbm_noise_params_batch)))                                                                  
+    return list(map(list, zip(*rbm_noise_params_batch)))
   return rbm_noise_params_batch
 
-def generate_samples_T(key, h_field, spin_shape, 
-                       len_chain_E, burn_E_factor, num_samples_E, 
-                       psi_apply, 
-                       len_chain, burn_factor, num_samples, 
-                       T, noise_amp, 
+def generate_samples_T(key, h_field, spin_shape,
+                       len_chain_E, burn_E_factor, num_samples_E,
+                       psi_apply,
+                       len_chain, burn_factor, num_samples,
+                       T, noise_amp,
                        p_flip,
-                       params, 
-                       angle, 
-                       return_results=False, 
+                       params,
+                       angle,
+                       return_results=False,
                        init_noise=0.):
   num_spins = spin_shape[0] * spin_shape[1]
   # Parameter for estimating energy
@@ -102,22 +102,22 @@ def generate_samples_T(key, h_field, spin_shape,
   # Parameters for mcmc_param
   len_chain_burn= burn_factor
   ham = tc_utils.set_up_ham_field_rotated(spin_shape, h_field, angle)
-  estimate_ET_fn = functools.partial(estimates_mcmc.estimate_operator, operator=ham, psi_apply=psi_apply, 
-                                    len_chain=len_chain_E, len_chain_first_burn=len_chain_burn_E, spin_shape=spin_shape, 
+  estimate_ET_fn = functools.partial(estimates_mcmc.estimate_operator, operator=ham, psi_apply=psi_apply,
+                                    len_chain=len_chain_E, len_chain_first_burn=len_chain_burn_E, spin_shape=spin_shape,
                                     num_samples=num_samples_E)
   key_sample, key_init, key_flip = jax.random.split(key, 3)
   rbm_noise_params_batch = generate_field_noise_batch(key_init, params,
                                                       init_noise, num_samples, spin_shape)
   # propose_move_param_fn = functools.partial(tc_utils.generate_FV_noise_param, amp_noise=noise_amp)
   propose_move_param_fn = functools.partial(tc_utils.propose_param_fn, p_mpar=p_flip, amp_noise=noise_amp)
-  accept_rate, new_samples_dict, new_energies = mcmc_param.energy_sampling_mcmc(key_sample, rbm_noise_params_batch, 
-                                                                  len_chain_burn, len_chain, estimate_ET_fn, 
-                                                                  propose_move_param_fn, T, 
+  accept_rate, new_samples_dict, new_energies = mcmc_param.energy_sampling_mcmc(key_sample, rbm_noise_params_batch,
+                                                                  len_chain_burn, len_chain, estimate_ET_fn,
+                                                                  propose_move_param_fn, T,
                                                                    return_results=return_results)
 
   new_samples = jax.tree_map(lambda x: einops.rearrange(x, ' a b c d e -> (a b) c d e'), new_samples_dict )
   new_energies = einops.rearrange(new_energies, ' a b -> (a b)') / num_spins
-  return accept_rate, new_samples, new_energies    
+  return accept_rate, new_samples, new_energies
 
 def main(argv):
   config = FLAGS.config
@@ -143,25 +143,25 @@ def main(argv):
   # Parameters for mcmc_param
   len_chain= config.len_chain
   burn_factor= None
-  num_samples=5
-  # sector_labels = np.concatenate(([np.full((num_samples * len_chain,), i) for i in sector_list]))     # Create labels for each batch of samples 
-  
+  num_samples=3
+  # sector_labels = np.concatenate(([np.full((num_samples * len_chain,), i) for i in sector_list]))     # Create labels for each batch of samples
+
   # jit function
   generate_samples_T_fn = functools.partial(
       generate_samples_T, spin_shape=spin_shape, psi_apply=psi_apply,
-      len_chain_E=len_chain_E, burn_E_factor=burn_E_factor, num_samples_E=num_samples_E, 
-      len_chain=len_chain, burn_factor=burn_factor, num_samples=num_samples, 
+      len_chain_E=len_chain_E, burn_E_factor=burn_E_factor, num_samples_E=num_samples_E,
+      len_chain=len_chain, burn_factor=burn_factor, num_samples=num_samples,
       noise_amp=noise_amp, p_flip=p_mparticle)
   generate_samples_T_jit = jax.jit(generate_samples_T_fn, static_argnums=(8, ))
 
   new_samples_list = []
   new_energies_list = []
   accept_rate_list = []
-  
+
   params_dict = pickle.load(open(file_path+"../../"+"params_dict.p", "rb"))
   params_list = [tc_utils.convert_rbm_expanded(params_dict[(sec, h_field, iteration)], (spin_shape[0]//2, spin_shape[1])) for sec in range(1, 5)]
   for params in tqdm(params_list, desc="param sector"):
-    accept_rate, new_samples, new_energies = generate_samples_T_jit(key=next(rng_seq), h_field=h_field, T=T, params=params, angle=angle)      
+    accept_rate, new_samples, new_energies = generate_samples_T_jit(key=next(rng_seq), h_field=h_field, T=T, params=params, angle=angle)
     new_samples_list.append(new_samples)
     new_energies_list.append(new_energies)
     accept_rate_list.append(accept_rate)
@@ -169,7 +169,7 @@ def main(argv):
   file_name_energies_accept = f"energies_accept_{spin_shape}_hz{h_field}_T{T}_iter{iteration}.nc"
   samples_all_secs = utils.concat_along_axis(new_samples_list, axis=0)
   energies_all_secs = np.concatenate(new_energies_list)[np.newaxis, np.newaxis, np.newaxis, ...] # numpy should work here because only generate_smaples is jitted
-  accepts_all_secs = np.concatenate(accept_rate_list)[np.newaxis, np.newaxis, np.newaxis, ...]    
+  accepts_all_secs = np.concatenate(accept_rate_list)[np.newaxis, np.newaxis, np.newaxis, ...]
   data_vars = {}
   data_vars['energy'] = (["h", "T", "iter", "samples"], energies_all_secs)
   data_vars['accept'] = (["h", "T", "iter", "chains"], accepts_all_secs)

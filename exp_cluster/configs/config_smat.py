@@ -9,7 +9,7 @@ def get_config():
   config.job_id = config_dict.placeholder(int)
   #
   config.iter_list = [2]
-  h_params = [0.3, 0.4, 0.5, 0.6]
+  h_params = [0., 0.3, 0.4, 0.5, 0.6, 1.]
   t_params = [0.1, 0.3, 0.7]
   # h_and_t = list(itertools.product(h_params, t_params))
   config.h_t_iter = list(itertools.product(h_params, t_params, config.iter_list))
@@ -19,6 +19,6 @@ def get_config():
   # config.output_dir = os.path.join(config.data_dir, "estimates/")
   config.filenames_load = [f"samples_(6, 3)_hz{h}_T{T}_iter{i}.p" for (h, T, i) in config.h_t_iter]
   config.filenames_save = f"S_mat.nc"
-  
+
   return config
 
