@@ -12,7 +12,6 @@ import estimates_mcmc
 import datetime
 import re
 import pickle
-# import files
 from google.colab import files
 import diffusion_map
 from tqdm import tqdm
@@ -169,18 +168,18 @@ def get_vector(num_sites, batch_size, psi, psi_params):
     return _batch_iterator(iterator, batch_size)
 
   def _batch_iterator(iterator, batch_size=1):
-  cs = []
-  count = 0
-  for c in iterator:
-    cs.append(c)
-    count += 1
-    if count == batch_size:
-      cs_out = np.stack(cs)
-      cs = []
-      count = 0
-      yield cs_out
-  if cs:
-    yield np.stack(cs)
+    cs = []
+    count = 0
+    for c in iterator:
+      cs.append(c)
+      count += 1
+      if count == batch_size:
+        cs_out = np.stack(cs)
+        cs = []
+        count = 0
+        yield cs_out
+    if cs:
+      yield np.stack(cs)
 
   psi_fn = jax.jit(jax.vmap(functools.partial(psi, psi_params)))
   psi_values = []

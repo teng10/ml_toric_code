@@ -4,7 +4,6 @@ import re
 import datetime
 import numpy as np
 import haiku as hk
-#import optax
 import jax
 import jax.numpy as jnp
 import functools
@@ -12,7 +11,6 @@ import pickle
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib import cm
-#import seaborn
 import xarray as xr
 import scipy
 from scipy.interpolate import griddata
@@ -24,6 +22,7 @@ from absl import app
 import collections
 import sys
 import os
+import json
 
 # setting path
 sys.path.append('..')
@@ -49,7 +48,6 @@ import ml_collections
 from ml_collections.config_flags import config_flags
 
 config_flags.DEFINE_config_file('config')
-# flags.DEFINE_integer('job_id', 0, 'slurm job id.')
 FLAGS = flags.FLAGS
 
 # def _get_similarity_matrix(similarity_fn, params_stacked):
