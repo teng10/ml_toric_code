@@ -159,20 +159,18 @@ def main(argv):
     ds_vec.to_netcdf(path=output_dir+filename_vec)
 
     # compute overlap
+    overlaps = []
     for k, h in enumerate(h_field_array):
-      overlaps = []
-      for sec in sector_list:
-        vecs = vec_h_sec[0, k, :]
-        overlaps.append(exact_comp._get_overlap_matrix(vecs))
-      data_vars['overlaps_exact'] = (['iter', 'h', 'sec', 'sec2'], np.stack(overlaps, 0)[np.newaxis, ...])
+      vecs = vec_h_sec[0, k, :]
+      overlaps.append(exact_comp._get_overlap_matrix(vecs))
+    data_vars['overlaps_exact'] = (['iter', 'h', 'sec', 'sec2'], np.stack(overlaps, 0)[np.newaxis, ...])
 
     # compute fidelity
+    fidelities = []
     for k, sec in enumerate(sector_list):
-      fidelities = []
-      for h in h_field_array:
-        vecs = vec_h_sec[0, :, k]
-        fidelities.append(exact_comp._get_overlap_matrix(vecs))
-      data_vars['fidelities_exact'] = (['iter', 'sec', 'h', 'h2'], np.stack(fidelities, 0)[np.newaxis, ...])    
+      vecs = vec_h_sec[0, :, k]
+      fidelities.append(exact_comp._get_overlap_matrix(vecs))
+    data_vars['fidelities_exact'] = (['iter', 'sec', 'h', 'h2'], np.stack(fidelities, 0)[np.newaxis, ...])    
 
   my_dataset = xr.Dataset(data_vars=data_vars, coords=dict(sec=sector_list, h=h_field_array, iter=[iteration], 
     sec2=sector_list, h2=h_field_array))
