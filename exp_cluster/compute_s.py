@@ -107,8 +107,8 @@ def main(argv):
 
   my_dataset = xr.merge(data_sets)
   my_dataset.to_netcdf(path=output_dir+filename_save)
-  with open(f'config_{job_id}.json', 'w') as f:
-    json.dump(output_dir+config.to_json(), f)
+  with open(output_dir+f'config_{job_id}.json', 'w') as f:
+    json.dump(config.to_json(), f)
 
 if __name__ == '__main__':
   app.run(main)

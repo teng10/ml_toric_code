@@ -11,7 +11,7 @@ def get_config():
   config.est_desc = "WL_H_S_O"
   config.compute_vector = True
   #
-  config.sector_list = [1, 2]
+  config.sector_list = [1, 2, 3, 4]
   config.iter_list = [0, 1, 2]
   config.model_name = 'rbm'
   config.burn_E_factor = 5

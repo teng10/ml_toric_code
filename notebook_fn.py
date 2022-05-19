@@ -33,13 +33,12 @@ def get_date():
   mo = pattern.search(str(now))
   return mo.group()[1:]
   
-def save_file(data, file_name, file_path, add_date=True):
-  if add_date:
-    now = datetime.datetime.now()
-    pattern = re.compile(r"-\d\d-\d\d")
-    mo = pattern.search(str(now))
-    date = mo.group()[1:]
-    file_name = f"{date}_" + file_name
+def save_file(data, file_name, file_path):
+  now = datetime.datetime.now()
+  pattern = re.compile(r"-\d\d-\d\d")
+  mo = pattern.search(str(now))
+  date = mo.group()[1:]
+  file_name = f"{date}_" + file_name
   pickle.dump(data, open(file_path+file_name, 'wb'))
   files.download(file_path+file_name)
 
@@ -164,19 +163,12 @@ def include_overlaps(
 
 def get_vector(num_sites, batch_size, psi, psi_params):
   """Generates a full wavefunction by evaluating `psi` on basis elements."""
-  # print(basis_iterator)
-  psi_fn = jax.jit(jax.vmap(functools.partial(psi, psi_params)))
-  psi_values = []
-  basis_iterator = _get_full_basis_iterator(num_sites, batch_size)
-  for cs in basis_iterator:
-    psi_values.append(jax.device_get(psi_fn(cs)))
-  return np.concatenate(psi_values)  
+  
+  def _get_full_basis_iterator(n_sites, batch_size):
+    iterator = itertools.product([-1., 1.], repeat=n_sites)
+    return _batch_iterator(iterator, batch_size)
 
-def _get_full_basis_iterator(n_sites, batch_size):
-  iterator = itertools.product([-1., 1.], repeat=n_sites)
-  return _batch_iterator(iterator, batch_size)
-
-def _batch_iterator(iterator, batch_size=1):
+  def _batch_iterator(iterator, batch_size=1):
   cs = []
   count = 0
   for c in iterator:
@@ -190,10 +182,13 @@ def _batch_iterator(iterator, batch_size=1):
   if cs:
     yield np.stack(cs)
 
-def exact_overlap(v1, v2):
-  norm_1 = np.vdot(v1, v1)
-  norm_2 = np.vdot(v2, v2)
-  return np.abs(np.vdot(v1, v2) / np.sqrt(norm_1 * norm_2))
+  psi_fn = jax.jit(jax.vmap(functools.partial(psi, psi_params)))
+  psi_values = []
+  basis_iterator = _get_full_basis_iterator(num_sites, batch_size)
+  for cs in basis_iterator:
+    psi_values.append(jax.device_get(psi_fn(cs)))
+  return np.concatenate(psi_values)  
+
 
 def include_overlaps_exact(  
     indices, 
