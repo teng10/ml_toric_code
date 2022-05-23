@@ -20,7 +20,7 @@ def get_config():
   config.len_chain_E = 30
   # number of ensembles to generate for each sector
   config.num_samples = 3
-  config.len_chain= 150
+  config.len_chain= 250
   # T and h parameters to generate
   # h_params = [0.]
   h_params = [0., 0.1, 0.2, 0.3, 0.325, 0.35, 0.375, 0.4, 0.425, 0.45, 0.475, 0.5, 0.525, 0.55, 0.575, 0.6, 0.625, 0.65, 0.675, 0.7, 1.]
@@ -30,7 +30,7 @@ def get_config():
   config.filenames_ens = [f"samples_{config.spin_shape}_hz{h}_T{T}_iter{config.iter}.p" for (h, T) in config.h_and_t]
   config.filenames_ens_property = [f"energies_accept_{config.spin_shape}_hz{h}_T{T}_iter{config.iter}.nc" for (h, T) in config.h_and_t]
 
-  config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/10331255/"  
+  config.data_dir = "/Volumes/GoogleDrive/My Drive/Projects/ML_toric_code/Data_cluster/data/10331255/"
   return config
 
 
