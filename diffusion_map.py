@@ -7,14 +7,19 @@ import itertools
 import einops
 import tc_utils
 
-# def _get_similarity_matrix(similarity_fn, params_stacked):
-#   params_list = utils.split_axis(params_stacked, axis=0)
-#   num_params = len(params_list)
-#   s_mat = np.zeros((num_params, num_params))
-#   for i, param1 in enumerate(params_list):
-#   	for j, param2 in enumerate(params_list):
-#   		s_mat[i, j] = similarity_fn(param1, param2)
-#   return s_mat
+def _get_similarity_matrix_np(similarity_fn, params_stacked):
+  # params_list = utils.split_axis(params_stacked, axis=0)
+  num_params = jax.tree_leaves(utils.shape_structure(params_stacked))[0]
+  s_mat = np.zeros((num_params, num_params))
+  for i in range(num_params):
+    for j in range(i, num_params):
+      param1 = utils.slice_along_axis(params_stacked, 0, i)
+      param2 = utils.slice_along_axis(params_stacked, 0, j)
+      sim = similarity_fn(param1, param2)
+      s_mat[i, j] = sim
+      s_mat[j, i] = sim
+  return s_mat
+  
 def _get_similarity_matrix(similarity_fn, params_stacked):
   similarity_vec = jax.vmap(jax.vmap(similarity_fn, (0, None)), (None, 0))
   return similarity_vec(params_stacked, params_stacked)
