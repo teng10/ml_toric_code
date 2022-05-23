@@ -32,12 +32,13 @@ def get_date():
   mo = pattern.search(str(now))
   return mo.group()[1:]
   
-def save_file(data, file_name, file_path):
-  now = datetime.datetime.now()
-  pattern = re.compile(r"-\d\d-\d\d")
-  mo = pattern.search(str(now))
-  date = mo.group()[1:]
-  file_name = f"{date}_" + file_name
+def save_file(data, file_name, file_path, add_date=True):
+  if add_date:
+    now = datetime.datetime.now()
+    pattern = re.compile(r"-\d\d-\d\d")
+    mo = pattern.search(str(now))
+    date = mo.group()[1:]
+    file_name = f"{date}_" + file_name
   pickle.dump(data, open(file_path+file_name, 'wb'))
   files.download(file_path+file_name)
 
@@ -494,3 +495,13 @@ def plot_w_loop(fig, axes, w_dict):
     ax.annotate(f"$h=${col}", xy=(0.5, 1.1), xytext=(0, pad),
                   xycoords='axes fraction', textcoords='offset points',
                   size='large', ha='center', va='baseline', fontsize=15)   
+
+def _convert_ds_dict(ds, var_name, t_params, h_params, iter=2):
+  my_dict = {}
+  for T in t_params:
+    scaled_smat_iter = []
+    for h in h_params:
+      key = (T, h)
+      smat = ds.sel(T=T, h=h, iter=iter)[var_name].values
+      my_dict[key] = smat
+  return my_dict    
