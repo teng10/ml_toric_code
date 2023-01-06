@@ -19,13 +19,12 @@ def get_config():
   config.num_samples_E = 200
   config.len_chain_E = 30
   # number of ensembles to generate for each sector
-  config.num_samples = 2
+  config.num_samples = 3
   config.len_chain= 250
   # T and h parameters to generate
   # h_params = [0.]
-  #h_params = [0., 0.1, 0.2, 0.3, 0.325, 0.35, 0.375, 0.4, 0.425, 0.45, 0.475, 0.5, 0.525, 0.55, 0.575, 0.6, 0.625, 0.65, 0.675, 0.7, 1.]
-  h_params = [0., 0.325, 0.4, 0.475, 0.525, 0.55, 0.575, 0.6, 0.65, 0.7, 1.]
-  t_params = [0.1, 0.3, 1.]
+  h_params = [0., 0.1, 0.2, 0.3, 0.325, 0.35, 0.375, 0.4, 0.425, 0.45, 0.475, 0.5, 0.525, 0.55, 0.575, 0.6, 0.625, 0.65, 0.675, 0.7, 1.]
+  t_params = [0.1, 0.3, 0.7]
   config.h_and_t = list(itertools.product(h_params, t_params))
 
   config.filenames_ens = [f"samples_{config.spin_shape}_hz{h}_T{T}_iter{config.iter}.p" for (h, T) in config.h_and_t]
