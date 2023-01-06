@@ -371,6 +371,10 @@ def kernel_fn(similarity, epsilon):
 	# return jnp.exp(-(1. - similarity) / (2. * epsilon))
 	return jnp.exp(-(jnp.ones_like(similarity) - similarity) / (2. * epsilon))
 
+def kernel_fn_np(similarity, epsilon):
+	# return jnp.exp(-(1. - similarity) / (2. * epsilon))
+	return np.exp(-(np.ones_like(similarity) - similarity) / (2. * epsilon))	
+
 def kernel_fn_double_exp(similarity, epsilon1, epsilon2):
 	# return jnp.exp(-(1. - similarity) / (2. * epsilon))
 	kernel_exp =  jnp.exp(-(jnp.ones_like(similarity) - similarity) / (2. * epsilon1))	
@@ -412,6 +416,17 @@ def transition_mat(K_mat, return_z=False):
 	z1 = jnp.sum(K_mat, axis=1)
 	z2 = jnp.sum(K_mat, axis=0)
 	A_mat = K_mat / jnp.sqrt(jnp.outer(z1, z2))
+	if return_z:
+		# return A_mat, jnp.diag(1. / jnp.sqrt(z2))
+		return A_mat, z2
+	return A_mat
+
+def transition_mat_np(K_mat, return_z=False):
+	"""Return both kernal matrix and a similar matrix A (which is symmetric)"""
+	# K_mat = kernel_mat(all_w, epsilon)
+	z1 = np.sum(K_mat, axis=1)
+	z2 = np.sum(K_mat, axis=0)
+	A_mat = K_mat / np.sqrt(np.outer(z1, z2))
 	if return_z:
 		# return A_mat, jnp.diag(1. / jnp.sqrt(z2))
 		return A_mat, z2
